@@ -71,7 +71,7 @@ function getTodayString(): string {
 
 export function DashboardPage() {
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
-  const { data, loading, refetch } = useQuery(MEMBERS_QUERY, {
+  const { data, loading } = useQuery(MEMBERS_QUERY, {
     pollInterval: 30_000,
   });
   const { data: sessionData } = useQuery(ACTIVE_SESSION, {
@@ -91,10 +91,9 @@ export function DashboardPage() {
     );
   }
 
-  const d = data as any;
-  const members = d?.members ?? [];
-  const summary = d?.todayAttendanceSummary;
-  const me = members.find((m: any) => m.id === selectedMemberId);
+  const members = data?.members ?? [];
+  const summary = data?.todayAttendanceSummary;
+  const me = members.find((m) => m.id === selectedMemberId);
 
   if (!selectedMemberId) {
     return (
@@ -103,7 +102,7 @@ export function DashboardPage() {
           <Text className="text-2xl font-bold text-gray-900 mb-6">
             누구세요?
           </Text>
-          {members.map((m: any) => (
+          {members.map((m) => (
             <Pressable
               key={m.id}
               className="bg-white rounded-xl p-4 mb-3 flex-row items-center"
@@ -161,8 +160,11 @@ export function DashboardPage() {
           date: getTodayString(),
           hours,
         },
+        refetchQueries: [
+          { query: MEMBERS_QUERY },
+          { query: ACTIVE_SESSION, variables: { memberId: selectedMemberId } },
+        ],
       });
-      refetch();
     } catch (e: any) {
       Alert.alert("오류", e.message);
     }
@@ -210,7 +212,7 @@ export function DashboardPage() {
         <AttendanceCard
           date={getTodayString()}
           status={me?.currentStatus ?? "NOT_ATTENDED"}
-          checkInTime={(sessionData as any)?.activeSession?.checkInTime ?? null}
+          checkInTime={sessionData?.activeSession?.checkInTime ?? null}
           isLate={me?.currentStatus === "LATE"}
           onCheckIn={handleCheckIn}
           onCheckOut={handleCheckOut}
