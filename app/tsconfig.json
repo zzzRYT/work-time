@@ -6,7 +6,8 @@
     "paths": {
       "@shared/*": ["src/shared/*"],
       "@pages/*": ["src/pages/*"],
-      "@app/*": ["src/app/*"]
+      "@app/*": ["src/app/*"],
+      "@graphql": ["./src/graphql"]
     },
     "plugins": [
       {

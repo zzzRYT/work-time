@@ -14,6 +14,7 @@ module.exports = function (api) {
             "@shared": "./src/shared",
             "@pages": "./src/pages",
             "@app": "./src/app",
+            "@graphql": "./src/graphql",
           },
         },
       ],
