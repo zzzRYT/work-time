@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Alert, Pressable, ScrollView, Text, View } from "react-native";
 import { useQuery, useMutation } from "@apollo/client";
-import gql from "graphql-tag";
+import { graphql } from "@graphql";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AttendanceCard } from "./ui/attendance-card";
 import { VacationButton } from "./ui/vacation-button";
 import { StudyingMembers } from "./ui/studying-members";
 
-const MEMBERS_QUERY = gql`
+const MEMBERS_QUERY = graphql(`
   query Members {
     members {
       id
@@ -24,9 +24,9 @@ const MEMBERS_QUERY = gql`
       late
     }
   }
-`;
+`);
 
-const CHECK_IN = gql`
+const CHECK_IN = graphql(`
   mutation CheckIn($memberId: ID!) {
     checkIn(memberId: $memberId) {
       id
@@ -34,25 +34,25 @@ const CHECK_IN = gql`
       isLate
     }
   }
-`;
+`);
 
-const CHECK_OUT = gql`
+const CHECK_OUT = graphql(`
   mutation CheckOut($memberId: ID!) {
     checkOut(memberId: $memberId) {
       id
       checkOutTime
     }
   }
-`;
+`);
 
-const USE_VACATION = gql`
+const USE_VACATION = graphql(`
   mutation UseVacation($memberId: ID!, $date: String!, $hours: Int!) {
     useVacation(memberId: $memberId, date: $date, hours: $hours) {
       id
       hours
     }
   }
-`;
+`);
 
 function getTodayString(): string {
   const now = new Date();
