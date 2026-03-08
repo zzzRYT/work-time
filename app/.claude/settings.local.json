@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npm install @apollo/server@^5)",
+      "Bash(mysql -u root -e \"CREATE DATABASE IF NOT EXISTS work_time;\")",
+      "Bash(brew list mysql)",
+      "Bash(brew list mysql@8.0)",
+      "Bash(npx prisma migrate dev --name init)",
+      "Bash(npx tsx prisma/seed.ts)",
+      "Bash(python3 -m json.tool)",
+      "Bash(lsof -ti :4000)",
+      "Bash(xargs kill)",
+      "Bash(npx expo install expo-router expo-linking expo-constants expo-status-bar react-native-safe-area-context react-native-screens react-native-gesture-handler)",
+      "Bash(npx expo install nativewind tailwindcss@3)",
+      "Bash(npm install tailwind-merge clsx class-variance-authority @apollo/client graphql)",
+      "Bash(npx expo install nativewind@^4 tailwindcss@3.4.17)",
+      "Bash(npm install nativewind@^4 tailwindcss@3.4.17 --legacy-peer-deps)",
+      "Bash(npm install tailwind-merge clsx class-variance-authority @apollo/client graphql --legacy-peer-deps)"
+    ]
+  }
+}

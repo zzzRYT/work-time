@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Member {
+  id          String   @id @default(cuid())
+  name        String
+  displayName String
+  color       String
+  createdAt   DateTime @default(now())
+
+  sessions       Session[]
+  dailyVacations DailyVacation[]
+  monthlyFees    MonthlyFee[]
+
+  @@map("members")
+}
+
+model Session {
+  id           String    @id @default(cuid())
+  memberId     String
+  date         String
+  checkInTime  DateTime
+  checkOutTime DateTime?
+  isLate       Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+
+  member Member @relation(fields: [memberId], references: [id])
+
+  @@index([memberId, date])
+  @@index([date])
+  @@map("sessions")
+}
+
+model DailyVacation {
+  id       String @id @default(cuid())
+  memberId String
+  date     String
+  hours    Int
+
+  member Member @relation(fields: [memberId], references: [id])
+
+  @@unique([memberId, date])
+  @@map("daily_vacations")
+}
+
+model MonthlyFee {
+  id       String  @id @default(cuid())
+  memberId String
+  month    String
+  isPaid   Boolean @default(false)
+
+  member Member @relation(fields: [memberId], references: [id])
+
+  @@unique([memberId, month])
+  @@map("monthly_fees")
+}
