@@ -1,0 +1,19 @@
+spectaql:
+  logoFile: null
+  faviconFile: null
+  displayAllServers: true
+
+introspection:
+  url: "http://localhost:4000"
+
+info:
+  title: "Work Time App - GraphQL API"
+  description: "스터디 그룹 출석/학습 시간 관리 API"
+  version: "0.1.0"
+  contact:
+    name: "Work Time App"
+
+servers:
+  - url: "http://localhost:4000"
+    description: "로컬 개발 서버"
+    production: false
