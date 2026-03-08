@@ -63,19 +63,19 @@ export function HistoryPage() {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const { data: membersData } = useQuery(MEMBERS_QUERY);
-  const members = (membersData as any)?.members ?? [];
+  const members = membersData?.members ?? [];
 
   const { data: calendarData } = useQuery(CALENDAR_QUERY, {
     variables: { memberId: selectedMemberId, year, month },
     skip: !selectedMemberId,
   });
-  const calData = calendarData as any;
+  const calData = calendarData;
 
   const { data: dayData } = useQuery(DAY_DETAIL_QUERY, {
     variables: { memberId: selectedMemberId, date: selectedDate },
     skip: !selectedMemberId || !selectedDate,
   });
-  const detail = (dayData as any)?.dayDetail;
+  const detail = dayData?.dayDetail;
 
   if (!selectedMemberId) {
     return (
@@ -84,7 +84,7 @@ export function HistoryPage() {
           <Text className="text-2xl font-bold text-gray-900 mb-6">
             누구의 기록?
           </Text>
-          {members.map((m: any) => (
+          {members.map((m) => (
             <Pressable
               key={m.id}
               className="bg-white rounded-xl p-4 mb-3 flex-row items-center"

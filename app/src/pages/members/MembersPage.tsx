@@ -80,9 +80,7 @@ export function MembersPage() {
   });
   const [toggleFee] = useMutation(TOGGLE_FEE);
 
-  const d = data as any;
-
-  if (loading && !d) {
+  if (loading && !data) {
     return (
       <SafeAreaView className="flex-1 bg-surface items-center justify-center">
         <Text className="text-gray-400">로딩중...</Text>
@@ -96,8 +94,8 @@ export function MembersPage() {
         variables: { memberId, month: currentMonth },
       });
       refetch();
-    } catch (e: any) {
-      Alert.alert("오류", e.message);
+    } catch (e) {
+      Alert.alert("오류", e instanceof Error ? e.message : "알 수 없는 오류");
     }
   };
 
@@ -108,21 +106,21 @@ export function MembersPage() {
           스터디원
         </Text>
 
-        {d?.todayAttendanceSummary && (
+        {data?.todayAttendanceSummary && (
           <AttendanceSummary {...d.todayAttendanceSummary} className="mb-4" />
         )}
 
-        <MemberList members={d?.members ?? []} className="mb-4" />
+        <MemberList members={data?.members ?? []} className="mb-4" />
 
         <FeeSection
-          entries={d?.feeStatus ?? []}
+          entries={data?.feeStatus ?? []}
           onTogglePayment={handleTogglePayment}
           className="mb-4"
         />
 
         <Ranking
-          weeklyRanking={d?.weekly ?? []}
-          monthlyRanking={d?.monthly ?? []}
+          weeklyRanking={data?.weekly ?? []}
+          monthlyRanking={data?.monthly ?? []}
           className="mb-8"
         />
       </ScrollView>
