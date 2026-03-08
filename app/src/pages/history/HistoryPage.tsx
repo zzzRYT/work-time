@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { useQuery } from "@apollo/client";
-import gql from "graphql-tag";
+import { graphql } from "@graphql";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Calendar } from "./ui/calendar";
 import { MonthlySummary } from "./ui/monthly-summary";
 import { DayDetail } from "./ui/day-detail";
 
-const MEMBERS_QUERY = gql`
+const MEMBERS_QUERY = graphql(`
   query Members {
     members {
       id
@@ -15,9 +15,9 @@ const MEMBERS_QUERY = gql`
       color
     }
   }
-`;
+`);
 
-const CALENDAR_QUERY = gql`
+const CALENDAR_QUERY = graphql(`
   query Calendar($memberId: ID!, $year: Int!, $month: Int!) {
     calendar(memberId: $memberId, year: $year, month: $month) {
       date
@@ -32,9 +32,9 @@ const CALENDAR_QUERY = gql`
       totalLateFee
     }
   }
-`;
+`);
 
-const DAY_DETAIL_QUERY = gql`
+const DAY_DETAIL_QUERY = graphql(`
   query DayDetail($memberId: ID!, $date: String!) {
     dayDetail(memberId: $memberId, date: $date) {
       sessions {
@@ -48,7 +48,7 @@ const DAY_DETAIL_QUERY = gql`
       vacationHours
     }
   }
-`;
+`);
 
 function getKSTNow() {
   const now = new Date();
