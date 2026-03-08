@@ -7,10 +7,11 @@ type TimerProps = {
   className?: string;
 };
 
-function formatDuration(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${h}시간 ${m}분`;
+function formatDuration(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return `${h}시간 ${m}분 ${s}초`;
 }
 
 export function Timer({ checkInTime, className }: TimerProps) {
@@ -25,19 +26,18 @@ export function Timer({ checkInTime, className }: TimerProps) {
     const start = new Date(checkInTime).getTime();
 
     function tick() {
-      const now = Date.now();
-      setElapsed(Math.floor((now - start) / 60_000));
+      setElapsed(Math.floor((Date.now() - start) / 1_000));
     }
 
     tick();
-    const id = setInterval(tick, 60_000);
+    const id = setInterval(tick, 1_000);
     return () => clearInterval(id);
   }, [checkInTime]);
 
   if (!checkInTime) {
     return (
       <View className={cn("items-center py-4", className)}>
-        <Text className="text-4xl font-bold text-gray-300">0시간 0분</Text>
+        <Text className="text-4xl font-bold text-gray-300">0시간 0분 0초</Text>
       </View>
     );
   }
