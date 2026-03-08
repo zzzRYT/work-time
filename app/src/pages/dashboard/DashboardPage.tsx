@@ -45,6 +45,15 @@ const CHECK_OUT = graphql(`
   }
 `);
 
+const ACTIVE_SESSION = graphql(`
+  query ActiveSession($memberId: ID!) {
+    activeSession(memberId: $memberId) {
+      id
+      checkInTime
+    }
+  }
+`);
+
 const USE_VACATION = graphql(`
   mutation UseVacation($memberId: ID!, $date: String!, $hours: Int!) {
     useVacation(memberId: $memberId, date: $date, hours: $hours) {
@@ -63,6 +72,11 @@ function getTodayString(): string {
 export function DashboardPage() {
   const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
   const { data, loading, refetch } = useQuery(MEMBERS_QUERY, {
+    pollInterval: 30_000,
+  });
+  const { data: sessionData } = useQuery(ACTIVE_SESSION, {
+    variables: { memberId: selectedMemberId! },
+    skip: !selectedMemberId,
     pollInterval: 30_000,
   });
   const [checkIn] = useMutation(CHECK_IN);
@@ -115,8 +129,11 @@ export function DashboardPage() {
     try {
       await checkIn({
         variables: { memberId: selectedMemberId },
+        refetchQueries: [
+          { query: MEMBERS_QUERY },
+          { query: ACTIVE_SESSION, variables: { memberId: selectedMemberId } },
+        ],
       });
-      refetch();
     } catch (e: any) {
       Alert.alert("오류", e.message);
     }
@@ -126,8 +143,11 @@ export function DashboardPage() {
     try {
       await checkOut({
         variables: { memberId: selectedMemberId },
+        refetchQueries: [
+          { query: MEMBERS_QUERY },
+          { query: ACTIVE_SESSION, variables: { memberId: selectedMemberId } },
+        ],
       });
-      refetch();
     } catch (e: any) {
       Alert.alert("오류", e.message);
     }
@@ -190,7 +210,7 @@ export function DashboardPage() {
         <AttendanceCard
           date={getTodayString()}
           status={me?.currentStatus ?? "NOT_ATTENDED"}
-          checkInTime={null}
+          checkInTime={(sessionData as any)?.activeSession?.checkInTime ?? null}
           isLate={me?.currentStatus === "LATE"}
           onCheckIn={handleCheckIn}
           onCheckOut={handleCheckOut}
