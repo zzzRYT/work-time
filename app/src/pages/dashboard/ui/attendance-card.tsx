@@ -10,6 +10,7 @@ type AttendanceCardProps = {
   status: "NOT_ATTENDED" | "STUDYING" | "COMPLETED" | "LATE" | "VACATION";
   checkInTime: string | null;
   isLate: boolean;
+  todayStudyMinutes: number;
   onCheckIn: () => void;
   onCheckOut: () => void;
   className?: string;
@@ -28,6 +29,7 @@ export function AttendanceCard({
   status,
   checkInTime,
   isLate,
+  todayStudyMinutes,
   onCheckIn,
   onCheckOut,
   className,
@@ -44,6 +46,12 @@ export function AttendanceCard({
       </View>
 
       <Timer checkInTime={status === "STUDYING" ? checkInTime : null} />
+
+      {todayStudyMinutes > 0 && (
+        <Text className="text-sm text-gray-500 text-center mb-2">
+          오늘 총 공부: {Math.floor(todayStudyMinutes / 60)}시간 {todayStudyMinutes % 60}분
+        </Text>
+      )}
 
       <LateAlert isLate={isLate} className="mb-4" />
 

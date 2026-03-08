@@ -214,6 +214,7 @@ export function DashboardPage() {
           status={me?.currentStatus ?? "NOT_ATTENDED"}
           checkInTime={sessionData?.activeSession?.checkInTime ?? null}
           isLate={me?.currentStatus === "LATE"}
+          todayStudyMinutes={me?.todayStudyMinutes ?? 0}
           onCheckIn={handleCheckIn}
           onCheckOut={handleCheckOut}
           className="mb-4"
