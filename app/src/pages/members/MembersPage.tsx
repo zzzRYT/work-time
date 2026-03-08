@@ -1,13 +1,13 @@
 import { Alert, ScrollView, Text } from "react-native";
 import { useQuery, useMutation } from "@apollo/client";
-import gql from "graphql-tag";
+import { graphql } from "@graphql";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AttendanceSummary } from "./ui/attendance-summary";
 import { MemberList } from "./ui/member-list";
 import { FeeSection } from "./ui/fee-section";
 import { Ranking } from "./ui/ranking";
 
-const MEMBERS_PAGE_QUERY = gql`
+const MEMBERS_PAGE_QUERY = graphql(`
   query MembersPage($month: String!) {
     members {
       id
@@ -55,16 +55,16 @@ const MEMBERS_PAGE_QUERY = gql`
       lateCount
     }
   }
-`;
+`);
 
-const TOGGLE_FEE = gql`
+const TOGGLE_FEE = graphql(`
   mutation ToggleFee($memberId: ID!, $month: String!) {
     toggleFeePayment(memberId: $memberId, month: $month) {
       id
       isPaid
     }
   }
-`;
+`);
 
 function getCurrentMonth(): string {
   const now = new Date();
