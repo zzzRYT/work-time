@@ -63,6 +63,8 @@ export const sessionTypeDefs = gql`
   }
 
   extend type Query {
+    """해당 멤버의 오늘 활성 세션 (체크아웃 전). 없으면 null"""
+    activeSession(memberId: ID!): Session
     """오늘의 출석 요약"""
     todayAttendanceSummary: AttendanceSummary!
     """특정 멤버의 특정 날짜 상세 조회"""

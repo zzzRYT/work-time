@@ -9,6 +9,21 @@ import { LATE_FEE_AMOUNT, FULL_DAY_VACATION_HOURS } from "../constants.js";
 
 export const sessionResolvers = {
   Query: {
+    activeSession: async (
+      _: unknown,
+      { memberId }: { memberId: string },
+      { prisma }: Context,
+    ) => {
+      const today = getKSTToday();
+      return prisma.session.findFirst({
+        where: {
+          memberId,
+          date: today,
+          checkOutTime: null,
+        },
+      });
+    },
+
     todayAttendanceSummary: async (
       _: unknown,
       __: unknown,
