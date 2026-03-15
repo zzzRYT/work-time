@@ -1,12 +1,10 @@
 import { useState } from "react";
-import { ScrollView, Text, View, Pressable } from "react-native";
+import { ActivityIndicator, Text, View } from "react-native";
 import { useQuery } from "@apollo/client";
 import { graphql } from "@graphql";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useMemberStore } from "@shared/store/member";
-import { Calendar } from "./ui/calendar";
-import { MonthlySummary } from "./ui/monthly-summary";
-import { DayDetail } from "./ui/day-detail";
+import { HistoryContent } from "./ui/history-content";
 
 const CALENDAR_QUERY = graphql(`
   query Calendar($memberId: ID!, $year: Int!, $month: Int!) {
@@ -53,17 +51,23 @@ export function HistoryPage() {
   const [month, setMonth] = useState(kst.getUTCMonth() + 1);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
-  const { data: calendarData } = useQuery(CALENDAR_QUERY, {
+  const {
+    data: calendarData,
+    loading: calendarLoading,
+    error: calendarError,
+  } = useQuery(CALENDAR_QUERY, {
     variables: { memberId: selectedMemberId!, year, month },
     skip: !selectedMemberId,
   });
-  const calData = calendarData;
 
-  const { data: dayData } = useQuery(DAY_DETAIL_QUERY, {
+  const {
+    data: dayData,
+    loading: dayLoading,
+    error: dayError,
+  } = useQuery(DAY_DETAIL_QUERY, {
     variables: { memberId: selectedMemberId!, date: selectedDate! },
     skip: !selectedMemberId || !selectedDate,
   });
-  const detail = dayData?.dayDetail;
 
   const handlePrevMonth = () => {
     if (month === 1) {
@@ -85,46 +89,38 @@ export function HistoryPage() {
     setSelectedDate(null);
   };
 
+  if (calendarLoading && !calendarData) {
+    return (
+      <SafeAreaView className="flex-1 bg-surface items-center justify-center">
+        <ActivityIndicator size="large" color="#6366F1" />
+      </SafeAreaView>
+    );
+  }
+
+  if (calendarError) {
+    return (
+      <SafeAreaView className="flex-1 bg-surface items-center justify-center px-4">
+        <Text className="text-red-500 text-base text-center">
+          기록을 불러올 수 없습니다
+        </Text>
+        <Text className="text-gray-400 text-sm mt-2 text-center">
+          {calendarError.message}
+        </Text>
+      </SafeAreaView>
+    );
+  }
+
   return (
-    <SafeAreaView className="flex-1 bg-surface">
-      <ScrollView className="flex-1 px-4 pt-4">
-        <Text className="text-2xl font-bold text-gray-900 mb-4">내 기록</Text>
-
-        <View className="flex-row items-center justify-center gap-4 mb-4">
-          <Pressable onPress={handlePrevMonth}>
-            <Text className="text-primary text-lg font-bold">◀</Text>
-          </Pressable>
-          <Text className="text-base font-semibold">
-            {year}년 {month}월
-          </Text>
-          <Pressable onPress={handleNextMonth}>
-            <Text className="text-primary text-lg font-bold">▶</Text>
-          </Pressable>
-        </View>
-
-        <Calendar
-          year={year}
-          month={month}
-          days={calData?.calendar ?? []}
-          selectedDate={selectedDate}
-          onSelectDate={setSelectedDate}
-          className="mb-4"
-        />
-
-        {calData?.monthlySummary && (
-          <MonthlySummary {...calData.monthlySummary} className="mb-4" />
-        )}
-
-        {selectedDate && detail && (
-          <DayDetail
-            date={selectedDate}
-            sessions={detail.sessions}
-            totalDurationMinutes={detail.totalDurationMinutes}
-            vacationHours={detail.vacationHours}
-            className="mb-8"
-          />
-        )}
-      </ScrollView>
-    </SafeAreaView>
+    <HistoryContent
+      year={year}
+      month={month}
+      calendarDays={calendarData?.calendar ?? []}
+      monthlySummary={calendarData?.monthlySummary ?? null}
+      selectedDate={selectedDate}
+      dayDetail={dayData?.dayDetail ?? null}
+      onSelectDate={setSelectedDate}
+      onPrevMonth={handlePrevMonth}
+      onNextMonth={handleNextMonth}
+    />
   );
 }
