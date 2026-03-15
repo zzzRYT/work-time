@@ -3,13 +3,6 @@
 /** 현재 기수 */
 export const CURRENT_COHORT = 5;
 
-/** 스터디 시작 시간 (24h, KST) */
-export const STUDY_START_HOUR = 10;
-export const STUDY_START_MINUTE = 0;
-
-/** 지각비 (원) */
-export const LATE_FEE_AMOUNT = 1_000;
-
 /** 월 회비 (원) */
 export const MONTHLY_FEE = 10_000;
 

@@ -40,5 +40,17 @@ export const memberResolvers = {
         return sum + calculateDurationMinutes(s.checkInTime, s.checkOutTime);
       }, 0);
     },
+
+    todayVacationHours: async (
+      parent: Member,
+      _: unknown,
+      { prisma }: Context,
+    ) => {
+      const today = getKSTToday();
+      const vacation = await prisma.dailyVacation.findFirst({
+        where: { memberId: parent.id, date: today },
+      });
+      return vacation?.hours ?? null;
+    },
   },
 };

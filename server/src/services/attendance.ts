@@ -39,12 +39,14 @@ export function deriveStatus(
 export function isLateCheckIn(
   checkInTime: Date,
   existingSessionsToday: Session[],
+  studyStartHour: number,
+  studyStartMinute: number,
 ): boolean {
   // 재체크인(이미 세션이 있는 경우)은 지각 아님
   if (existingSessionsToday.length > 0) {
     return false;
   }
 
-  const studyStart = getStudyStartTimeToday();
+  const studyStart = getStudyStartTimeToday(studyStartHour, studyStartMinute);
   return checkInTime.getTime() >= studyStart.getTime();
 }

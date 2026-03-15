@@ -1,5 +1,3 @@
-import { STUDY_START_HOUR, STUDY_START_MINUTE } from "../constants.js";
-
 const KST_OFFSET = 9 * 60; // +09:00 in minutes
 
 /** 현재 KST 시각의 Date 객체 반환 */
@@ -23,12 +21,12 @@ export function formatDate(d: Date): string {
 }
 
 /** 오늘의 스터디 시작 시각 (KST) — UTC Date로 반환 */
-export function getStudyStartTimeToday(): Date {
+export function getStudyStartTimeToday(hour: number, minute: number): Date {
   const now = new Date();
   const utc = now.getTime() + now.getTimezoneOffset() * 60_000;
   const kstNow = new Date(utc + KST_OFFSET * 60_000);
 
-  kstNow.setHours(STUDY_START_HOUR, STUDY_START_MINUTE, 0, 0);
+  kstNow.setHours(hour, minute, 0, 0);
 
   // KST → UTC로 역변환
   return new Date(kstNow.getTime() - KST_OFFSET * 60_000);

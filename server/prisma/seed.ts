@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 const MEMBERS = [
-  { name: "김철수", displayName: "철수", color: "indigo" },
+  { name: "김철수", displayName: "철수", color: "indigo", role: "ADMIN" },
   { name: "이영희", displayName: "영희", color: "pink" },
   { name: "박지민", displayName: "지민", color: "emerald" },
   { name: "최수진", displayName: "수진", color: "gray" },
@@ -129,10 +129,10 @@ async function main() {
 
   // 월별 회비 데이터
   const feeData = [
-    { memberId: "김철수", isPaid: true },
-    { memberId: "이영희", isPaid: false },
-    { memberId: "박지민", isPaid: true },
-    { memberId: "정민호", isPaid: true },
+    { memberId: "김철수", monthlyFeeStatus: "PAID", lateFeeStatus: "PAID" },
+    { memberId: "이영희", monthlyFeeStatus: "UNPAID", lateFeeStatus: "UNPAID" },
+    { memberId: "박지민", monthlyFeeStatus: "PAID", lateFeeStatus: "UNPAID" },
+    { memberId: "정민호", monthlyFeeStatus: "PENDING", lateFeeStatus: "PENDING" },
   ];
 
   for (const f of feeData) {
@@ -145,7 +145,19 @@ async function main() {
     });
   }
 
-  console.log("Seeded sample sessions, vacations, and fees");
+  // Settings 초기 데이터
+  await prisma.settings.upsert({
+    where: { id: "default" },
+    update: {},
+    create: {
+      id: "default",
+      studyStartHour: 10,
+      studyStartMinute: 0,
+      lateFeeAmount: 1000,
+    },
+  });
+
+  console.log("Seeded sample sessions, vacations, fees, and settings");
 }
 
 main()

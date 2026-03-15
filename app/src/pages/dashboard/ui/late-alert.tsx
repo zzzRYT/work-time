@@ -1,5 +1,10 @@
 import { Text, View } from "react-native";
 import { cn } from "@shared/lib/cn";
+import {
+  LATE_FEE_AMOUNT,
+  STUDY_START_HOUR,
+  STUDY_START_MINUTE,
+} from "@shared/constants/cohort";
 
 type LateAlertProps = {
   isLate: boolean;
@@ -9,6 +14,8 @@ type LateAlertProps = {
 export function LateAlert({ isLate, className }: LateAlertProps) {
   if (!isLate) return null;
 
+  const startTime = `${String(STUDY_START_HOUR).padStart(2, "0")}:${String(STUDY_START_MINUTE).padStart(2, "0")}`;
+
   return (
     <View
       className={cn(
@@ -17,7 +24,7 @@ export function LateAlert({ isLate, className }: LateAlertProps) {
       )}
     >
       <Text className="text-late text-sm font-medium">
-        지각입니다. 지각비 1,000원이 부과됩니다.
+        지각비 {LATE_FEE_AMOUNT.toLocaleString()}원 (기준: {startTime})
       </Text>
     </View>
   );

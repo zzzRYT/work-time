@@ -5,7 +5,8 @@ import { isLateCheckIn } from "../services/attendance.js";
 import { buildCalendar } from "../services/calendar.js";
 import { getKSTToday, getMonthDateRange } from "../utils/date.js";
 import { calculateDurationMinutes } from "../utils/duration.js";
-import { LATE_FEE_AMOUNT, FULL_DAY_VACATION_HOURS } from "../constants.js";
+import { FULL_DAY_VACATION_HOURS } from "../constants.js";
+import { getSettings } from "../services/settings.js";
 
 export const sessionResolvers = {
   Query: {
@@ -166,7 +167,8 @@ export const sessionResolvers = {
       ).length;
 
       const vacationDays = vacations.length;
-      const totalLateFee = lateCount * LATE_FEE_AMOUNT;
+      const settings = await getSettings(prisma);
+      const totalLateFee = lateCount * settings.lateFeeAmount;
 
       return {
         attendanceDays,
@@ -216,7 +218,13 @@ export const sessionResolvers = {
       });
 
       const now = new Date();
-      const isLate = isLateCheckIn(now, existingSessions);
+      const settings = await getSettings(prisma);
+      const isLate = isLateCheckIn(
+        now,
+        existingSessions,
+        settings.studyStartHour,
+        settings.studyStartMinute,
+      );
 
       return prisma.session.create({
         data: {

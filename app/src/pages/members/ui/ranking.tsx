@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { cn } from "@shared/lib/cn";
+import { useMemberStore } from "@shared/store/member";
 
 type RankingEntry = {
   member: { id: string; displayName: string; color: string };
@@ -15,6 +16,8 @@ type RankingProps = {
   className?: string;
 };
 
+const MEDALS = ["🥇", "🥈", "🥉"];
+
 function formatMinutes(min: number): string {
   const h = Math.floor(min / 60);
   const m = min % 60;
@@ -28,6 +31,7 @@ export function Ranking({
 }: RankingProps) {
   const [tab, setTab] = useState<"weekly" | "monthly">("weekly");
   const ranking = tab === "weekly" ? weeklyRanking : monthlyRanking;
+  const selectedMemberId = useMemberStore((s) => s.selectedMemberId);
 
   return (
     <View className={cn("bg-white rounded-2xl p-4", className)}>
@@ -69,44 +73,56 @@ export function Ranking({
         </Pressable>
       </View>
 
-      {ranking.map((entry, i) => (
-        <View
-          key={entry.member.id}
-          className="flex-row items-center py-3 border-b border-gray-100"
-        >
-          <Text
-            className={cn(
-              "w-8 text-center font-bold",
-              i === 0
-                ? "text-late text-lg"
-                : i === 1
-                  ? "text-gray-500 text-base"
-                  : "text-gray-400 text-sm"
-            )}
-          >
-            {i + 1}
-          </Text>
-          <View
-            className="w-8 h-8 rounded-full items-center justify-center mr-3"
-            style={{ backgroundColor: entry.member.color }}
-          >
-            <Text className="text-white text-xs font-bold">
-              {entry.member.displayName.charAt(0)}
-            </Text>
-          </View>
-          <View className="flex-1">
-            <Text className="text-sm font-medium text-gray-900">
-              {entry.member.displayName}
-            </Text>
-            <Text className="text-xs text-gray-500">
-              {entry.attendanceDays}일 · 지각 {entry.lateCount}회
-            </Text>
-          </View>
-          <Text className="text-sm font-bold text-primary">
-            {formatMinutes(entry.totalStudyMinutes)}
+      {ranking.length === 0 ? (
+        <View className="items-center py-6">
+          <Text className="text-gray-400 text-sm">
+            {tab === "weekly" ? "이번 주" : "이번 달"} 기록이 없습니다
           </Text>
         </View>
-      ))}
+      ) : (
+        ranking.map((entry, i) => {
+          const isMe = entry.member.id === selectedMemberId;
+          const medal = MEDALS[i];
+
+          return (
+            <View
+              key={entry.member.id}
+              className={cn(
+                "flex-row items-center py-3 border-b border-gray-100",
+                isMe && "bg-primary/5 -mx-2 px-2 rounded-lg border-l-2 border-l-primary"
+              )}
+            >
+              <Text className="w-8 text-center text-lg">
+                {medal ?? `${i + 1}`}
+              </Text>
+              <View
+                className="w-8 h-8 rounded-full items-center justify-center mr-3"
+                style={{ backgroundColor: entry.member.color }}
+              >
+                <Text className="text-white text-xs font-bold">
+                  {entry.member.displayName.charAt(0)}
+                </Text>
+              </View>
+              <View className="flex-1">
+                <View className="flex-row items-center gap-1">
+                  <Text className="text-sm font-medium text-gray-900">
+                    {entry.member.displayName}
+                  </Text>
+                  {isMe && (
+                    <Text className="text-xs text-primary font-medium">(나)</Text>
+                  )}
+                </View>
+                <Text className="text-xs text-gray-500">
+                  {entry.attendanceDays}일 · 지각 {entry.lateCount}회
+                </Text>
+              </View>
+              <Text className="text-sm font-bold text-primary">
+                {formatMinutes(entry.totalStudyMinutes)}
+              </Text>
+            </View>
+          );
+        })
+      )}
     </View>
   );
 }

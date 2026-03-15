@@ -55,3 +55,4 @@
 | dashboard | `dashboard/2026-03-04-Dashboard-spec.md` |
 | history | `history/2026-03-04-History-spec.md` |
 | members | `members/2026-03-04-Members-spec.md` |
+| admin | `admin/2026-03-08-Admin-spec.md` |

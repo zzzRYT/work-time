@@ -14,7 +14,8 @@ type MonthlySummaryProps = {
 function formatMinutes(min: number): string {
   const h = Math.floor(min / 60);
   const m = min % 60;
-  return `${h}시간 ${m}분`;
+  if (h === 0) return `${m}분`;
+  return `${h}h ${m}m`;
 }
 
 export function MonthlySummary({
@@ -35,21 +36,33 @@ export function MonthlySummary({
     { label: "지각비", value: `${totalLateFee.toLocaleString()}원`, color: "text-late" },
   ];
 
+  const allZero =
+    attendanceDays === 0 &&
+    totalStudyMinutes === 0 &&
+    lateCount === 0 &&
+    vacationDays === 0;
+
   return (
     <View className={cn("bg-white rounded-2xl p-4", className)}>
       <Text className="text-base font-semibold text-gray-900 mb-3">
         월간 요약
       </Text>
-      <View className="flex-row flex-wrap gap-y-3">
-        {items.map((item) => (
-          <View key={item.label} className="w-1/3 items-center">
-            <Text className="text-xs text-gray-500">{item.label}</Text>
-            <Text className={cn("text-base font-bold", item.color)}>
-              {item.value}
-            </Text>
-          </View>
-        ))}
-      </View>
+      {allZero ? (
+        <View className="items-center py-4">
+          <Text className="text-gray-400 text-sm">이 달의 기록이 없습니다</Text>
+        </View>
+      ) : (
+        <View className="flex-row flex-wrap gap-y-3">
+          {items.map((item) => (
+            <View key={item.label} className="w-1/3 items-center">
+              <Text className="text-xs text-gray-500">{item.label}</Text>
+              <Text className={cn("text-base font-bold", item.color)}>
+                {item.value}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
     </View>
   );
 }

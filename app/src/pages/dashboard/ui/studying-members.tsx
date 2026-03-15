@@ -20,13 +20,22 @@ export function StudyingMembers({ members, className }: StudyingMembersProps) {
 
   return (
     <View className={cn("bg-white rounded-2xl p-4", className)}>
-      <Text className="text-base font-semibold text-gray-900 mb-2 px-2">
-        공부중 ({studying.length})
-      </Text>
-      {studying.length === 0 ? (
-        <Text className="text-gray-400 text-sm px-2 py-4">
-          현재 공부중인 멤버가 없습니다.
+      <View className="flex-row items-center gap-2 mb-2 px-2">
+        <Text className="text-base font-semibold text-gray-900">
+          지금 공부 중
         </Text>
+        <View className="bg-primary/10 rounded-full px-2.5 py-0.5">
+          <Text className="text-primary text-sm font-bold">
+            {studying.length}명
+          </Text>
+        </View>
+      </View>
+      {studying.length === 0 ? (
+        <View className="items-center py-6">
+          <Text className="text-gray-400 text-sm">
+            아직 아무도 시작 안 했어요
+          </Text>
+        </View>
       ) : (
         studying.map((m) => (
           <MemberRow

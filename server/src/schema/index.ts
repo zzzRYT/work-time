@@ -3,6 +3,7 @@ import { memberTypeDefs } from "./member.js";
 import { sessionTypeDefs } from "./session.js";
 import { vacationTypeDefs } from "./vacation.js";
 import { feeTypeDefs } from "./fee.js";
+import { adminTypeDefs } from "./admin.js";
 
 const baseTypeDefs = gql`
   """출석 상태"""
@@ -42,4 +43,5 @@ export const typeDefs = [
   sessionTypeDefs,
   vacationTypeDefs,
   feeTypeDefs,
+  adminTypeDefs,
 ];

@@ -1,29 +1,55 @@
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { cn } from "@shared/lib/cn";
+
+type PaymentStatus = "UNPAID" | "PENDING" | "PAID";
 
 type FeeEntry = {
   member: { id: string; displayName: string; color: string };
   lateFee: number;
   monthlyFee: number;
-  isPaid: boolean;
+  monthlyFeeStatus: PaymentStatus;
+  lateFeeStatus: PaymentStatus;
   lateCount: number;
 };
 
 type FeeSectionProps = {
   entries: FeeEntry[];
-  onTogglePayment: (memberId: string) => void;
   className?: string;
 };
 
-export function FeeSection({
-  entries,
-  onTogglePayment,
-  className,
-}: FeeSectionProps) {
+const statusLabel: Record<PaymentStatus, string> = {
+  UNPAID: "미납",
+  PENDING: "대기",
+  PAID: "납부",
+};
+
+const statusBg: Record<PaymentStatus, string> = {
+  UNPAID: "bg-late/20",
+  PENDING: "bg-yellow-100",
+  PAID: "bg-studying/20",
+};
+
+const statusText: Record<PaymentStatus, string> = {
+  UNPAID: "text-late",
+  PENDING: "text-yellow-600",
+  PAID: "text-studying",
+};
+
+function Badge({ status }: { status: PaymentStatus }) {
+  return (
+    <View className={cn("rounded-full px-2 py-0.5", statusBg[status])}>
+      <Text className={cn("text-[10px] font-semibold", statusText[status])}>
+        {statusLabel[status]}
+      </Text>
+    </View>
+  );
+}
+
+export function FeeSection({ entries, className }: FeeSectionProps) {
   return (
     <View className={cn("bg-white rounded-2xl p-4", className)}>
       <Text className="text-base font-semibold text-gray-900 mb-3">
-        회비 현황
+        납부 현황
       </Text>
       {entries.map((e) => (
         <View
@@ -42,26 +68,31 @@ export function FeeSection({
             <Text className="text-sm font-medium text-gray-900">
               {e.member.displayName}
             </Text>
-            <Text className="text-xs text-gray-500">
-              지각 {e.lateCount}회 · 지각비 {e.lateFee.toLocaleString()}원
-            </Text>
-          </View>
-          <Pressable
-            className={cn(
-              "rounded-full px-3 py-1",
-              e.isPaid ? "bg-studying/20" : "bg-late/20"
+            {e.lateCount > 0 && (
+              <Text className="text-xs text-gray-500">
+                지각 {e.lateCount}회 · {e.lateFee.toLocaleString()}원
+              </Text>
             )}
-            onPress={() => onTogglePayment(e.member.id)}
-          >
-            <Text
-              className={cn(
-                "text-xs font-semibold",
-                e.isPaid ? "text-studying" : "text-late"
-              )}
-            >
-              {e.isPaid ? "납부" : "미납"}
-            </Text>
-          </Pressable>
+          </View>
+          <View className="flex-row items-center gap-1">
+            <View className="items-center">
+              <Text className="text-[9px] text-gray-400 mb-0.5">회비</Text>
+              <Badge status={e.monthlyFeeStatus} />
+            </View>
+            {e.lateCount > 0 ? (
+              <View className="items-center">
+                <Text className="text-[9px] text-gray-400 mb-0.5">지각비</Text>
+                <Badge status={e.lateFeeStatus} />
+              </View>
+            ) : (
+              <View className="items-center">
+                <Text className="text-[9px] text-gray-400 mb-0.5">지각비</Text>
+                <View className="rounded-full px-2 py-0.5 bg-gray-50">
+                  <Text className="text-[10px] font-semibold text-gray-300">—</Text>
+                </View>
+              </View>
+            )}
+          </View>
         </View>
       ))}
     </View>

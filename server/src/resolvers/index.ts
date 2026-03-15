@@ -2,6 +2,7 @@ import { memberResolvers } from "./member.js";
 import { sessionResolvers } from "./session.js";
 import { vacationResolvers } from "./vacation.js";
 import { feeResolvers } from "./fee.js";
+import { adminResolvers } from "./admin.js";
 
 // 딥 머지 유틸
 function mergeResolvers(...resolversList: Record<string, unknown>[]) {
@@ -22,4 +23,5 @@ export const resolvers = mergeResolvers(
   sessionResolvers,
   vacationResolvers,
   feeResolvers,
+  adminResolvers,
 );

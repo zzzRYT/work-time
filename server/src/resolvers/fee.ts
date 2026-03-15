@@ -1,5 +1,7 @@
+import { GraphQLError } from "graphql";
 import type { Context } from "../context.js";
-import { LATE_FEE_AMOUNT, MONTHLY_FEE } from "../constants.js";
+import { MONTHLY_FEE } from "../constants.js";
+import { getSettings } from "../services/settings.js";
 import {
   getMonthDateRange,
   getWeekDateRange,
@@ -7,6 +9,36 @@ import {
 } from "../utils/date.js";
 import { buildRanking } from "../services/ranking.js";
 import type { Session } from "@prisma/client";
+
+function validateMonthFormat(month: string) {
+  if (!/^\d{4}-\d{2}$/.test(month)) {
+    throw new GraphQLError("월은 YYYY-MM 형식이어야 합니다.", {
+      extensions: { code: "INVALID_MONTH_FORMAT" },
+    });
+  }
+}
+
+const VALID_FEE_TYPES = ["MONTHLY", "LATE"] as const;
+type FeeType = (typeof VALID_FEE_TYPES)[number];
+
+function getStatusField(type: FeeType): "monthlyFeeStatus" | "lateFeeStatus" {
+  return type === "MONTHLY" ? "monthlyFeeStatus" : "lateFeeStatus";
+}
+
+async function getOrCreateMonthlyFee(
+  prisma: Context["prisma"],
+  memberId: string,
+  month: string,
+) {
+  const existing = await prisma.monthlyFee.findUnique({
+    where: { memberId_month: { memberId, month } },
+  });
+  if (existing) return existing;
+
+  return prisma.monthlyFee.create({
+    data: { memberId, month, monthlyFeeStatus: "UNPAID", lateFeeStatus: "UNPAID" },
+  });
+}
 
 export const feeResolvers = {
   Query: {
@@ -35,12 +67,13 @@ export const feeResolvers = {
       });
       const feeMap = new Map(allFees.map((f) => [f.memberId, f]));
 
+      const settings = await getSettings(prisma);
+
       return members.map((member) => {
         const sessions = allSessions.filter(
           (s) => s.memberId === member.id,
         );
 
-        // 날짜별 첫 세션으로 지각 카운트
         const dateFirst = new Map<string, Session>();
         for (const s of sessions) {
           if (!dateFirst.has(s.date)) dateFirst.set(s.date, s);
@@ -53,9 +86,10 @@ export const feeResolvers = {
 
         return {
           member,
-          lateFee: lateCount * LATE_FEE_AMOUNT,
+          lateFee: lateCount * settings.lateFeeAmount,
           monthlyFee: MONTHLY_FEE,
-          isPaid: fee?.isPaid ?? false,
+          monthlyFeeStatus: fee?.monthlyFeeStatus ?? "UNPAID",
+          lateFeeStatus: fee?.lateFeeStatus ?? "UNPAID",
           lateCount,
         };
       });
@@ -94,28 +128,69 @@ export const feeResolvers = {
   },
 
   Mutation: {
-    toggleFeePayment: async (
+    requestFeePayment: async (
       _: unknown,
-      args: { memberId: string; month: string },
+      args: { memberId: string; month: string; type: string },
       { prisma }: Context,
     ) => {
-      const existing = await prisma.monthlyFee.findUnique({
-        where: { memberId_month: { memberId: args.memberId, month: args.month } },
-      });
+      validateMonthFormat(args.month);
+      const fee = await getOrCreateMonthlyFee(prisma, args.memberId, args.month);
+      const field = getStatusField(args.type as FeeType);
 
-      if (existing) {
-        return prisma.monthlyFee.update({
-          where: { id: existing.id },
-          data: { isPaid: !existing.isPaid },
-        });
+      if (fee[field] !== "UNPAID") {
+        throw new GraphQLError(
+          `현재 상태(${fee[field]})에서는 납부 신청할 수 없습니다.`,
+          { extensions: { code: "INVALID_STATUS_TRANSITION" } },
+        );
       }
 
-      return prisma.monthlyFee.create({
-        data: {
-          memberId: args.memberId,
-          month: args.month,
-          isPaid: true,
-        },
+      return prisma.monthlyFee.update({
+        where: { id: fee.id },
+        data: { [field]: "PENDING" },
+      });
+    },
+
+    confirmFeePayment: async (
+      _: unknown,
+      args: { memberId: string; month: string; type: string },
+      { prisma }: Context,
+    ) => {
+      validateMonthFormat(args.month);
+      const fee = await getOrCreateMonthlyFee(prisma, args.memberId, args.month);
+      const field = getStatusField(args.type as FeeType);
+
+      if (fee[field] !== "PENDING") {
+        throw new GraphQLError(
+          `확인 대기 상태가 아닙니다. 현재 상태: ${fee[field]}`,
+          { extensions: { code: "INVALID_STATUS_TRANSITION" } },
+        );
+      }
+
+      return prisma.monthlyFee.update({
+        where: { id: fee.id },
+        data: { [field]: "PAID" },
+      });
+    },
+
+    rejectFeePayment: async (
+      _: unknown,
+      args: { memberId: string; month: string; type: string },
+      { prisma }: Context,
+    ) => {
+      validateMonthFormat(args.month);
+      const fee = await getOrCreateMonthlyFee(prisma, args.memberId, args.month);
+      const field = getStatusField(args.type as FeeType);
+
+      if (fee[field] !== "PENDING") {
+        throw new GraphQLError(
+          `확인 대기 상태가 아닙니다. 현재 상태: ${fee[field]}`,
+          { extensions: { code: "INVALID_STATUS_TRANSITION" } },
+        );
+      }
+
+      return prisma.monthlyFee.update({
+        where: { id: fee.id },
+        data: { [field]: "UNPAID" },
       });
     },
   },

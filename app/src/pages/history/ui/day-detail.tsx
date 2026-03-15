@@ -23,6 +23,12 @@ function formatTime(iso: string): string {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
+function formatDuration(min: number): string {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${h}h ${m}m`;
+}
+
 export function DayDetail({
   date,
   sessions,
@@ -30,6 +36,8 @@ export function DayDetail({
   vacationHours,
   className,
 }: DayDetailProps) {
+  const hasActiveSession = sessions.some((s) => !s.checkOutTime);
+
   return (
     <View className={cn("bg-white rounded-2xl p-4", className)}>
       <Text className="text-base font-semibold text-gray-900 mb-3">
@@ -40,40 +48,60 @@ export function DayDetail({
         <View className="flex-row items-center mb-3 bg-vacation/10 rounded-lg px-3 py-2">
           <StatusBadge status="VACATION" />
           <Text className="text-vacation text-sm ml-2">
-            {vacationHours}시간 휴가
+            {vacationHours === 8 ? "전일 휴가" : `휴가 ${vacationHours}h`}
           </Text>
         </View>
       )}
 
       {sessions.length === 0 ? (
-        <Text className="text-gray-400 text-sm py-4">
-          기록이 없습니다.
-        </Text>
+        <View className="items-center py-6">
+          <Text className="text-gray-400 text-sm">기록이 없습니다</Text>
+        </View>
       ) : (
-        sessions.map((s) => (
-          <View
-            key={s.id}
-            className="flex-row items-center py-2 border-b border-gray-100"
-          >
-            <Text className="text-sm text-gray-700 flex-1">
-              {formatTime(s.checkInTime)} →{" "}
-              {s.checkOutTime ? formatTime(s.checkOutTime) : "진행중"}
-            </Text>
-            {s.durationMinutes != null && (
-              <Text className="text-sm text-gray-500 mr-2">
-                {Math.floor(s.durationMinutes / 60)}h {s.durationMinutes % 60}m
+        sessions.map((s) => {
+          const isActive = !s.checkOutTime;
+          return (
+            <View
+              key={s.id}
+              className="flex-row items-center py-2.5 border-b border-gray-100"
+            >
+              {s.isLate && (
+                <StatusBadge status="LATE" className="mr-2" />
+              )}
+              <Text
+                className={cn(
+                  "text-sm flex-1",
+                  isActive ? "text-studying font-medium" : "text-gray-700"
+                )}
+              >
+                {formatTime(s.checkInTime)} →{" "}
+                {isActive ? (
+                  <Text className="text-studying font-medium">진행 중</Text>
+                ) : (
+                  formatTime(s.checkOutTime!)
+                )}
               </Text>
-            )}
-            {s.isLate && <StatusBadge status="LATE" />}
-          </View>
-        ))
+              {s.durationMinutes != null && (
+                <Text
+                  className={cn(
+                    "text-sm",
+                    isActive ? "text-studying" : "text-gray-500"
+                  )}
+                >
+                  {formatDuration(s.durationMinutes)}
+                  {isActive && "~"}
+                </Text>
+              )}
+            </View>
+          );
+        })
       )}
 
       <View className="flex-row items-center justify-between mt-3 pt-3 border-t border-gray-200">
         <Text className="text-sm font-medium text-gray-700">합계</Text>
         <Text className="text-sm font-bold text-primary">
-          {Math.floor(totalDurationMinutes / 60)}시간{" "}
-          {totalDurationMinutes % 60}분
+          {formatDuration(totalDurationMinutes)}
+          {hasActiveSession && "~"}
         </Text>
       </View>
     </View>

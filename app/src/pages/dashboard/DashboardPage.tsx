@@ -1,14 +1,20 @@
-import { useState } from "react";
-import { Alert, Pressable, ScrollView, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { AppState, Pressable, ScrollView, Text, View } from "react-native";
 import { useQuery, useMutation } from "@apollo/client";
+import { useNetInfo } from "@react-native-community/netinfo";
 import { graphql } from "@graphql";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useMemberStore } from "@shared/store/member";
+import { getTodayString, getCurrentMonth } from "@shared/lib/date";
+import { Toast } from "@shared/ui/toast";
 import { AttendanceCard } from "./ui/attendance-card";
 import { VacationButton } from "./ui/vacation-button";
 import { StudyingMembers } from "./ui/studying-members";
+import { FeeShortcut } from "./ui/fee-shortcut";
+import { router } from "expo-router";
 
 const MEMBERS_QUERY = graphql(`
-  query Members {
+  query Members($month: String!) {
     members {
       id
       name
@@ -16,12 +22,21 @@ const MEMBERS_QUERY = graphql(`
       color
       currentStatus
       todayStudyMinutes
+      todayVacationHours
     }
     todayAttendanceSummary {
       total
       attended
       studying
       late
+    }
+    feeStatus(month: $month) {
+      member { id }
+      lateFee
+      monthlyFee
+      monthlyFeeStatus
+      lateFeeStatus
+      lateCount
     }
   }
 `);
@@ -50,6 +65,7 @@ const ACTIVE_SESSION = graphql(`
     activeSession(memberId: $memberId) {
       id
       checkInTime
+      isLate
     }
   }
 `);
@@ -63,25 +79,54 @@ const USE_VACATION = graphql(`
   }
 `);
 
-function getTodayString(): string {
-  const now = new Date();
-  const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
-  return kst.toISOString().slice(0, 10);
-}
+const REQUEST_FEE_PAYMENT = graphql(`
+  mutation DashboardRequestFeePayment($memberId: ID!, $month: String!, $type: FeeType!) {
+    requestFeePayment(memberId: $memberId, month: $month, type: $type) {
+      id
+      monthlyFeeStatus
+      lateFeeStatus
+    }
+  }
+`);
 
 export function DashboardPage() {
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
-  const { data, loading } = useQuery(MEMBERS_QUERY, {
+  const selectedMemberId = useMemberStore((s) => s.selectedMemberId);
+  const clearSelectedMemberId = useMemberStore((s) => s.clearSelectedMemberId);
+  const currentMonth = getCurrentMonth();
+  const netInfo = useNetInfo();
+  const isOffline = netInfo.isConnected === false;
+  const [toast, setToast] = useState<{
+    message: string;
+    variant: "error" | "success";
+  } | null>(null);
+
+  const { data, loading, refetch: refetchMembers } = useQuery(MEMBERS_QUERY, {
+    variables: { month: currentMonth },
     pollInterval: 30_000,
   });
-  const { data: sessionData } = useQuery(ACTIVE_SESSION, {
-    variables: { memberId: selectedMemberId! },
-    skip: !selectedMemberId,
-    pollInterval: 30_000,
-  });
-  const [checkIn] = useMutation(CHECK_IN);
-  const [checkOut] = useMutation(CHECK_OUT);
+  const { data: sessionData, refetch: refetchSession } = useQuery(
+    ACTIVE_SESSION,
+    {
+      variables: { memberId: selectedMemberId! },
+      skip: !selectedMemberId,
+      pollInterval: 30_000,
+    }
+  );
+  const [checkIn, { loading: checkInLoading }] = useMutation(CHECK_IN);
+  const [checkOut, { loading: checkOutLoading }] = useMutation(CHECK_OUT);
   const [useVacation] = useMutation(USE_VACATION);
+  const [requestFeePayment] = useMutation(REQUEST_FEE_PAYMENT);
+
+  // S-01-4: AppState 복귀 시 refetch
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active" && selectedMemberId) {
+        refetchMembers();
+        refetchSession();
+      }
+    });
+    return () => sub.remove();
+  }, [selectedMemberId]);
 
   if (loading && !data) {
     return (
@@ -94,61 +139,76 @@ export function DashboardPage() {
   const members = data?.members ?? [];
   const summary = data?.todayAttendanceSummary;
   const me = members.find((m) => m.id === selectedMemberId);
+  const myFee = data?.feeStatus?.find((f) => f.member.id === selectedMemberId);
 
-  if (!selectedMemberId) {
-    return (
-      <SafeAreaView className="flex-1 bg-surface">
-        <View className="px-4 pt-6">
-          <Text className="text-2xl font-bold text-gray-900 mb-6">
-            누구세요?
-          </Text>
-          {members.map((m) => (
-            <Pressable
-              key={m.id}
-              className="bg-white rounded-xl p-4 mb-3 flex-row items-center"
-              onPress={() => setSelectedMemberId(m.id)}
-            >
-              <View
-                className="w-10 h-10 rounded-full items-center justify-center mr-3"
-                style={{ backgroundColor: m.color }}
-              >
-                <Text className="text-white font-bold">
-                  {m.displayName.charAt(0)}
-                </Text>
-              </View>
-              <Text className="text-base font-medium">{m.displayName}</Text>
-            </Pressable>
-          ))}
-        </View>
-      </SafeAreaView>
-    );
+  if (selectedMemberId && members.length > 0 && !me) {
+    clearSelectedMemberId();
+    return null;
   }
+
+  const refetchAll = [
+    { query: MEMBERS_QUERY, variables: { month: currentMonth } },
+    { query: ACTIVE_SESSION, variables: { memberId: selectedMemberId! } },
+  ];
 
   const handleCheckIn = async () => {
     try {
       await checkIn({
-        variables: { memberId: selectedMemberId },
-        refetchQueries: [
-          { query: MEMBERS_QUERY },
-          { query: ACTIVE_SESSION, variables: { memberId: selectedMemberId } },
-        ],
+        variables: { memberId: selectedMemberId! },
+        optimisticResponse: {
+          checkIn: {
+            id: `temp-${Date.now()}`,
+            checkInTime: new Date().toISOString(),
+            isLate: false,
+          },
+        },
+        refetchQueries: refetchAll,
       });
-    } catch (e: any) {
-      Alert.alert("오류", e.message);
+    } catch {
+      setToast({ message: "체크인에 실패했습니다", variant: "error" });
     }
   };
 
   const handleCheckOut = async () => {
     try {
       await checkOut({
-        variables: { memberId: selectedMemberId },
-        refetchQueries: [
-          { query: MEMBERS_QUERY },
-          { query: ACTIVE_SESSION, variables: { memberId: selectedMemberId } },
-        ],
+        variables: { memberId: selectedMemberId! },
+        optimisticResponse: {
+          checkOut: {
+            id: sessionData?.activeSession?.id ?? `temp-${Date.now()}`,
+            checkOutTime: new Date().toISOString(),
+          },
+        },
+        refetchQueries: refetchAll,
       });
-    } catch (e: any) {
-      Alert.alert("오류", e.message);
+    } catch {
+      setToast({ message: "체크아웃에 실패했습니다", variant: "error" });
+    }
+  };
+
+  const handleRequestMonthlyFee = async () => {
+    try {
+      await requestFeePayment({
+        variables: { memberId: selectedMemberId!, month: currentMonth, type: "MONTHLY" as const },
+        refetchQueries: [{ query: MEMBERS_QUERY, variables: { month: currentMonth } }],
+      });
+      setToast({ message: "월 회비 납부 요청을 보냈습니다", variant: "success" });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "납부 신청에 실패했습니다";
+      setToast({ message: msg, variant: "error" });
+    }
+  };
+
+  const handleRequestLateFee = async () => {
+    try {
+      await requestFeePayment({
+        variables: { memberId: selectedMemberId!, month: currentMonth, type: "LATE" as const },
+        refetchQueries: [{ query: MEMBERS_QUERY, variables: { month: currentMonth } }],
+      });
+      setToast({ message: "지각비 납부 요청을 보냈습니다", variant: "success" });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "납부 신청에 실패했습니다";
+      setToast({ message: msg, variant: "error" });
     }
   };
 
@@ -156,31 +216,41 @@ export function DashboardPage() {
     try {
       await useVacation({
         variables: {
-          memberId: selectedMemberId,
+          memberId: selectedMemberId!,
           date: getTodayString(),
           hours,
         },
-        refetchQueries: [
-          { query: MEMBERS_QUERY },
-          { query: ACTIVE_SESSION, variables: { memberId: selectedMemberId } },
-        ],
+        refetchQueries: refetchAll,
       });
-    } catch (e: any) {
-      Alert.alert("오류", e.message);
+      setToast({ message: "휴가가 등록되었습니다", variant: "success" });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "휴가 등록에 실패했습니다";
+      setToast({ message: msg, variant: "error" });
     }
   };
 
   return (
     <SafeAreaView className="flex-1 bg-surface">
       <ScrollView className="flex-1 px-4 pt-4">
-        <View className="flex-row items-center justify-between mb-4">
+        <Pressable
+          className="flex-row items-center mb-4"
+          onPress={() => router.push("/select-member")}
+        >
+          {me && (
+            <View
+              className="w-8 h-8 rounded-full items-center justify-center mr-2"
+              style={{ backgroundColor: me.color }}
+            >
+              <Text className="text-white text-sm font-bold">
+                {me.displayName.charAt(0)}
+              </Text>
+            </View>
+          )}
           <Text className="text-2xl font-bold text-gray-900">
             {me?.displayName ?? ""}
           </Text>
-          <Pressable onPress={() => setSelectedMemberId(null)}>
-            <Text className="text-primary text-sm">멤버 변경</Text>
-          </Pressable>
-        </View>
+          <Text className="text-gray-400 ml-1 text-lg">▼</Text>
+        </Pressable>
 
         {summary && (
           <View className="flex-row bg-white rounded-xl p-3 mb-4 gap-2">
@@ -213,24 +283,49 @@ export function DashboardPage() {
           date={getTodayString()}
           status={me?.currentStatus ?? "NOT_ATTENDED"}
           checkInTime={sessionData?.activeSession?.checkInTime ?? null}
-          isLate={me?.currentStatus === "LATE"}
+          isLate={me?.currentStatus === "LATE" || sessionData?.activeSession?.isLate === true}
           todayStudyMinutes={me?.todayStudyMinutes ?? 0}
+          vacationHours={(me?.todayVacationHours as number | null) ?? null}
           onCheckIn={handleCheckIn}
           onCheckOut={handleCheckOut}
+          checkInLoading={checkInLoading}
+          checkOutLoading={checkOutLoading}
+          networkOffline={isOffline}
           className="mb-4"
         />
 
-        <VacationButton
-          onUseVacation={handleVacation}
-          disabled={
-            me?.currentStatus === "STUDYING" ||
-            me?.currentStatus === "VACATION"
-          }
-          className="mb-4"
-        />
+        {myFee && (
+          <FeeShortcut
+            monthlyFee={myFee.monthlyFee}
+            monthlyFeeStatus={myFee.monthlyFeeStatus}
+            lateFee={myFee.lateFee}
+            lateFeeStatus={myFee.lateFeeStatus}
+            lateCount={myFee.lateCount}
+            onRequestMonthlyFee={handleRequestMonthlyFee}
+            onRequestLateFee={handleRequestLateFee}
+            className="mb-4"
+          />
+        )}
+
+        {me?.currentStatus !== "VACATION" && (
+          <VacationButton
+            onUseVacation={handleVacation}
+            disabled={
+              me?.currentStatus === "STUDYING" ||
+              (me?.todayVacationHours != null && (me.todayVacationHours as number) > 0)
+            }
+            className="mb-4"
+          />
+        )}
 
         <StudyingMembers members={members} className="mb-8" />
       </ScrollView>
+
+      <Toast
+        message={toast?.message ?? null}
+        variant={toast?.variant}
+        onDismiss={() => setToast(null)}
+      />
     </SafeAreaView>
   );
 }

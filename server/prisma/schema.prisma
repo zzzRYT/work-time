@@ -12,6 +12,7 @@ model Member {
   name        String
   displayName String
   color       String
+  role        String   @default("MEMBER")
   createdAt   DateTime @default(now())
 
   sessions       Session[]
@@ -50,13 +51,24 @@ model DailyVacation {
 }
 
 model MonthlyFee {
-  id       String  @id @default(cuid())
-  memberId String
-  month    String
-  isPaid   Boolean @default(false)
+  id               String @id @default(cuid())
+  memberId         String
+  month            String
+  monthlyFeeStatus String @default("UNPAID")
+  lateFeeStatus    String @default("UNPAID")
 
   member Member @relation(fields: [memberId], references: [id])
 
   @@unique([memberId, month])
   @@map("monthly_fees")
+}
+
+model Settings {
+  id               String   @id @default("default")
+  studyStartHour   Int      @default(10)
+  studyStartMinute Int      @default(0)
+  lateFeeAmount    Int      @default(1000)
+  updatedAt        DateTime @updatedAt
+
+  @@map("settings")
 }

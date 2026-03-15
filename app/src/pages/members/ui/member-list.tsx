@@ -29,6 +29,7 @@ export function MemberList({ members, className }: MemberListProps) {
           displayName={m.displayName}
           color={m.color}
           status={m.currentStatus}
+          studyMinutes={m.todayStudyMinutes}
         />
       ))}
     </View>

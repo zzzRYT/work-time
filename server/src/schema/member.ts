@@ -10,10 +10,14 @@ export const memberTypeDefs = gql`
     displayName: String!
     """프로필 색상 (hex)"""
     color: String!
+    """역할 (ADMIN 또는 MEMBER)"""
+    role: MemberRole!
     """오늘의 출석 상태"""
     currentStatus: AttendanceStatus!
     """오늘 총 학습 시간(분)"""
     todayStudyMinutes: Int!
+    """오늘 휴가 시간 (null이면 휴가 없음)"""
+    todayVacationHours: Int
   }
 
   extend type Query {

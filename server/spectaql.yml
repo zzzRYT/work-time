@@ -1,6 +1,4 @@
 spectaql:
-  logoFile: null
-  faviconFile: null
   displayAllServers: true
 
 introspection:
