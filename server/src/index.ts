@@ -1,3 +1,6 @@
+import { initSentry } from "./sentry.js";
+initSentry();
+
 import http from "http";
 import express from "express";
 import cors from "cors";

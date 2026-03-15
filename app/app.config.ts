@@ -39,7 +39,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   runtimeVersion: {
     policy: "appVersion" as const,
   },
-  plugins: ["expo-router", "expo-asset", "expo-updates"],
+  plugins: [
+    "expo-router",
+    "expo-asset",
+    "expo-updates",
+    [
+      "@sentry/react-native/expo",
+      { organization: "your-org", project: "worktime-app" },
+    ],
+  ],
   extra: {
     apiUrl: process.env.API_URL || "http://localhost:4000/graphql",
   },
