@@ -21,18 +21,17 @@ const allowedOrigins = process.env.CORS_ORIGINS?.split(",") || [
 ];
 app.use(cors({ origin: allowedOrigins }));
 
-// Rate Limiting
+// Health check (before rate limiter)
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+// Rate Limiting (only for /graphql)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15분
   max: 1000, // 요청 제한
   standardHeaders: true,
   legacyHeaders: false,
-});
-app.use(limiter);
-
-// Health check
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
 // Apollo Server
@@ -44,7 +43,7 @@ const server = new ApolloServer({
 await server.start();
 
 // GraphQL endpoint
-app.use("/graphql", express.json({ limit: "50mb" }), (req, res) => {
+app.use("/graphql", limiter, express.json({ limit: "1mb" }), (req, res) => {
   const headers = new HeaderMap();
   for (const [key, value] of Object.entries(req.headers)) {
     if (value !== undefined) {

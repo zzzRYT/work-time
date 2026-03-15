@@ -1,4 +1,7 @@
 import "../../global.css";
+import { initSentry } from "@shared/lib/sentry";
+initSentry();
+
 import { useEffect } from "react";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { Providers } from "@app/providers";
