@@ -32,7 +32,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   web: {
     favicon: "./assets/favicon.png",
   },
-  plugins: ["expo-router", "expo-asset"],
+  updates: {
+    url: `https://u.expo.dev/${process.env.EXPO_PROJECT_ID}`,
+    fallbackToCacheTimeout: 0,
+  },
+  runtimeVersion: {
+    policy: "appVersion" as const,
+  },
+  plugins: ["expo-router", "expo-asset", "expo-updates"],
   extra: {
     apiUrl: process.env.API_URL || "http://localhost:4000/graphql",
   },

@@ -14,12 +14,14 @@
     },
     "preview": {
       "distribution": "internal",
+      "channel": "preview",
       "env": {
         "APP_VARIANT": "production",
         "API_URL": "https://your-railway-app.railway.app/graphql"
       }
     },
     "production": {
+      "channel": "production",
       "env": {
         "APP_VARIANT": "production",
         "API_URL": "https://your-railway-app.railway.app/graphql"
