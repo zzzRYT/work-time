@@ -56,18 +56,18 @@ export class FeeService {
     return this.feeRepo.save(fee);
   }
 
-  async getFeeStatus(month: string) {
+  async getFeeStatus(month: string, workspaceId: string) {
     const [yearStr, monthStr] = month.split('-');
     const { start, end } = getMonthDateRange(Number(yearStr), Number(monthStr));
 
     const [members, allSessions, allFees, settings] = await Promise.all([
-      this.memberRepo.find({ order: { createdAt: 'ASC' } }),
+      this.memberRepo.find({ where: { workspaceId }, order: { createdAt: 'ASC' } }),
       this.sessionRepo.find({
-        where: { date: Between(start, end) },
+        where: { date: Between(start, end), workspaceId },
         order: { checkInTime: 'ASC' },
       }),
-      this.feeRepo.find({ where: { month } }),
-      this.settingsService.getSettings(),
+      this.feeRepo.find({ where: { month, workspaceId } }),
+      this.settingsService.getSettings(workspaceId),
     ]);
 
     const feeMap = new Map(allFees.map((f) => [f.memberId, f]));
@@ -90,7 +90,7 @@ export class FeeService {
     });
   }
 
-  async getMemberRanking(period: RankingPeriod) {
+  async getMemberRanking(period: RankingPeriod, workspaceId: string) {
     let start: string;
     let end: string;
 
@@ -107,9 +107,9 @@ export class FeeService {
     }
 
     const [members, sessions] = await Promise.all([
-      this.memberRepo.find(),
+      this.memberRepo.find({ where: { workspaceId } }),
       this.sessionRepo.find({
-        where: { date: Between(start, end) },
+        where: { date: Between(start, end), workspaceId },
         order: { checkInTime: 'ASC' },
       }),
     ]);

@@ -26,6 +26,9 @@ export class MonthlyFeeEntity {
   @Column({ type: 'varchar', length: 20, name: 'late_fee_status', default: 'UNPAID' })
   lateFeeStatus!: string;
 
+  @Column({ type: 'uuid', name: 'workspace_id' })
+  workspaceId!: string;
+
   @ManyToOne(() => MemberEntity, (member) => member.monthlyFees)
   @JoinColumn({ name: 'member_id' })
   member!: MemberEntity;

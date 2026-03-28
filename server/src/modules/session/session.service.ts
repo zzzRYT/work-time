@@ -36,12 +36,12 @@ export class SessionService {
     });
   }
 
-  async getTodayAttendanceSummary() {
+  async getTodayAttendanceSummary(workspaceId: string) {
     const today = getKSTToday();
-    const total = await this.memberRepo.count();
+    const total = await this.memberRepo.count({ where: { workspaceId } });
 
     const todaySessions = await this.sessionRepo.find({
-      where: { date: today },
+      where: { date: today, workspaceId },
     });
 
     const memberSessions = new Map<string, SessionEntity[]>();
@@ -108,7 +108,7 @@ export class SessionService {
     return buildCalendar(year, month, sessions, vacations);
   }
 
-  async getMonthlySummary(memberId: string, year: number, month: number) {
+  async getMonthlySummary(memberId: string, year: number, month: number, workspaceId: string) {
     const { start, end } = getMonthDateRange(year, month);
 
     const [sessions, vacations] = await Promise.all([
@@ -141,7 +141,7 @@ export class SessionService {
     const lateCount = countLateDays(sessions);
 
     const vacationDays = vacations.length;
-    const settings = await this.settingsService.getSettings();
+    const settings = await this.settingsService.getSettings(workspaceId);
     const totalLateFee = lateCount * settings.lateFeeAmount;
 
     return {
@@ -154,7 +154,7 @@ export class SessionService {
     };
   }
 
-  async checkIn(memberId: string) {
+  async checkIn(memberId: string, workspaceId: string) {
     const today = getKSTToday();
 
     const vacation = await this.vacationRepo.findOne({
@@ -176,7 +176,7 @@ export class SessionService {
     });
 
     const now = new Date();
-    const settings = await this.settingsService.getSettings();
+    const settings = await this.settingsService.getSettings(workspaceId);
     const isLate = isLateCheckIn(
       now,
       existingSessions,
@@ -189,6 +189,7 @@ export class SessionService {
       date: today,
       checkInTime: now,
       isLate,
+      workspaceId,
     });
     return this.sessionRepo.save(session);
   }

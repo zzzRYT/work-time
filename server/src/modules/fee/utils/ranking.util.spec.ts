@@ -10,6 +10,7 @@ function makeMember(id: string, name: string): MemberEntity {
     color: '#000',
     role: 'MEMBER',
     createdAt: new Date(),
+    workspaceId: 'ws-1',
     sessions: [],
     dailyVacations: [],
     monthlyFees: [],
@@ -31,6 +32,7 @@ function makeSession(
     checkInTime: checkIn,
     checkOutTime: checkOut,
     isLate,
+    workspaceId: 'ws-1',
     createdAt: new Date(),
     member: {} as any,
   };

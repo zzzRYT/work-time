@@ -11,6 +11,7 @@ function makeSession(overrides: Partial<SessionEntity> = {}): SessionEntity {
     checkInTime: new Date('2026-03-01T01:00:00Z'),
     checkOutTime: new Date('2026-03-01T03:00:00Z'),
     isLate: false,
+    workspaceId: 'ws-1',
     createdAt: new Date(),
     member: {} as any,
     ...overrides,
@@ -23,6 +24,7 @@ function makeVacation(date: string, hours: number): DailyVacationEntity {
     memberId: 'member-1',
     date,
     hours,
+    workspaceId: 'ws-1',
     member: {} as any,
   };
 }

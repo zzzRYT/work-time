@@ -10,12 +10,19 @@ import { VacationModule } from './modules/vacation/vacation.module';
 import { FeeModule } from './modules/fee/fee.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import {
+  UserEntity,
+  WorkspaceEntity,
+  WorkspaceMemberEntity,
+  InviteEntity,
   MemberEntity,
   SessionEntity,
   DailyVacationEntity,
   MonthlyFeeEntity,
   SettingsEntity,
 } from './entities';
+import { AuthModule } from './modules/auth/auth.module';
+import { WorkspaceModule } from './modules/workspace/workspace.module';
+import { InviteModule } from './modules/invite/invite.module';
 
 function parseDbUrl(url: string) {
   const parsed = new URL(url);
@@ -38,6 +45,10 @@ const dbConfig = process.env.DATABASE_URL
       type: 'postgres',
       ...dbConfig,
       entities: [
+        UserEntity,
+        WorkspaceEntity,
+        WorkspaceMemberEntity,
+        InviteEntity,
         MemberEntity,
         SessionEntity,
         DailyVacationEntity,
@@ -49,6 +60,12 @@ const dbConfig = process.env.DATABASE_URL
       ssl: process.env.DATABASE_URL?.includes('supabase')
         ? { rejectUnauthorized: false }
         : false,
+      extra: {
+        // Supabase transaction pooler (port 6543) requires this
+        pgbouncer: true,
+        // Disable prepared statements for pgbouncer compatibility
+        statement_timeout: 30000,
+      },
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
@@ -62,6 +79,9 @@ const dbConfig = process.env.DATABASE_URL
       },
     ]),
     HealthModule,
+    AuthModule,
+    WorkspaceModule,
+    InviteModule,
     MemberModule,
     SessionModule,
     VacationModule,

@@ -19,8 +19,8 @@ export class MemberService {
     private readonly vacationRepo: Repository<DailyVacationEntity>,
   ) {}
 
-  async findAll() {
-    return this.memberRepo.find({ order: { createdAt: 'ASC' } });
+  async findAll(workspaceId: string) {
+    return this.memberRepo.find({ where: { workspaceId }, order: { createdAt: 'ASC' } });
   }
 
   async getCurrentStatus(memberId: string) {

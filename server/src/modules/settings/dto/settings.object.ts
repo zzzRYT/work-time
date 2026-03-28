@@ -3,7 +3,7 @@ import { ObjectType, Field, ID, Int } from '@nestjs/graphql';
 @ObjectType({ description: '스터디 그룹 전역 설정' })
 export class Settings {
   @Field(() => ID)
-  id!: string;
+  workspaceId!: string;
 
   @Field(() => Int, { description: '출근 시간 (시, 0~23)' })
   studyStartHour!: number;

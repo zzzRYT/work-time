@@ -31,6 +31,9 @@ export class SessionEntity {
   @Column({ type: 'boolean', name: 'is_late', default: false })
   isLate!: boolean;
 
+  @Column({ type: 'uuid', name: 'workspace_id' })
+  workspaceId!: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 

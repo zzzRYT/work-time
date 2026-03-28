@@ -24,13 +24,13 @@ export class SettingsService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async getSettings(): Promise<SettingsEntity> {
+  async getSettings(workspaceId: string): Promise<SettingsEntity> {
     let settings = await this.settingsRepo.findOne({
-      where: { id: 'default' },
+      where: { workspaceId },
     });
     if (!settings) {
       settings = this.settingsRepo.create({
-        id: 'default',
+        workspaceId,
         studyStartHour: 10,
         studyStartMinute: 0,
         lateFeeAmount: 1000,
@@ -41,7 +41,7 @@ export class SettingsService {
     return settings;
   }
 
-  async updateMemberRole(memberId: string, role: string) {
+  async updateMemberRole(memberId: string, role: string, workspaceId: string) {
     if (!VALID_ROLES.includes(role as (typeof VALID_ROLES)[number])) {
       throw new InvalidRoleError();
     }
@@ -50,7 +50,7 @@ export class SettingsService {
       const memberRepo = manager.getRepository(MemberEntity);
 
       const member = await memberRepo.findOne({
-        where: { id: memberId },
+        where: { id: memberId, workspaceId },
       });
       if (!member) {
         throw new MemberNotFoundError();
@@ -58,7 +58,7 @@ export class SettingsService {
 
       if (member.role === 'ADMIN' && role === 'MEMBER') {
         const adminCount = await memberRepo.count({
-          where: { role: 'ADMIN' },
+          where: { role: 'ADMIN', workspaceId },
         });
         if (adminCount <= 1) {
           throw new LastAdminError();
@@ -70,7 +70,7 @@ export class SettingsService {
     });
   }
 
-  async updateStudyStartTime(hour: number, minute: number) {
+  async updateStudyStartTime(workspaceId: string, hour: number, minute: number) {
     if (hour < 0 || hour > 23) {
       throw new InvalidHourError();
     }
@@ -79,11 +79,11 @@ export class SettingsService {
     }
 
     let settings = await this.settingsRepo.findOne({
-      where: { id: 'default' },
+      where: { workspaceId },
     });
     if (!settings) {
       settings = this.settingsRepo.create({
-        id: 'default',
+        workspaceId,
         studyStartHour: hour,
         studyStartMinute: minute,
         lateFeeAmount: 1000,
@@ -96,17 +96,17 @@ export class SettingsService {
     return this.settingsRepo.save(settings);
   }
 
-  async updateLateFeeAmount(amount: number) {
+  async updateLateFeeAmount(workspaceId: string, amount: number) {
     if (amount < 0) {
       throw new InvalidAmountError();
     }
 
     let settings = await this.settingsRepo.findOne({
-      where: { id: 'default' },
+      where: { workspaceId },
     });
     if (!settings) {
       settings = this.settingsRepo.create({
-        id: 'default',
+        workspaceId,
         studyStartHour: 10,
         studyStartMinute: 0,
         lateFeeAmount: amount,
@@ -118,17 +118,17 @@ export class SettingsService {
     return this.settingsRepo.save(settings);
   }
 
-  async updateMonthlyFeeAmount(amount: number) {
+  async updateMonthlyFeeAmount(workspaceId: string, amount: number) {
     if (amount < 0) {
       throw new InvalidAmountError();
     }
 
     let settings = await this.settingsRepo.findOne({
-      where: { id: 'default' },
+      where: { workspaceId },
     });
     if (!settings) {
       settings = this.settingsRepo.create({
-        id: 'default',
+        workspaceId,
         studyStartHour: 10,
         studyStartMinute: 0,
         lateFeeAmount: 1000,

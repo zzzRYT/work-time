@@ -8,6 +8,7 @@ import {
   ResolveField,
   Parent,
 } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import type { SessionEntity } from '../../entities/session.entity';
 import { Session } from './dto/session.object';
 import { AttendanceSummary } from './dto/attendance-summary.object';
@@ -16,6 +17,8 @@ import { CalendarDay } from './dto/calendar-day.object';
 import { MonthlySummaryResult } from './dto/monthly-summary.object';
 import { SessionService } from './session.service';
 import { calculateDurationMinutes } from '../../common/utils/duration.util';
+import { WorkspaceGuard } from '../auth/workspace.guard';
+import { CurrentWorkspace } from '../auth/decorators/current-workspace.decorator';
 
 @Resolver(() => Session)
 export class SessionResolver {
@@ -25,6 +28,7 @@ export class SessionResolver {
     nullable: true,
     description: '해당 멤버의 오늘 활성 세션 (체크아웃 전). 없으면 null',
   })
+  @UseGuards(WorkspaceGuard)
   async activeSession(
     @Args('memberId', { type: () => ID }) memberId: string,
   ): Promise<SessionEntity | null> {
@@ -32,11 +36,15 @@ export class SessionResolver {
   }
 
   @Query(() => AttendanceSummary, { description: '오늘의 출석 요약' })
-  async todayAttendanceSummary() {
-    return this.sessionService.getTodayAttendanceSummary();
+  @UseGuards(WorkspaceGuard)
+  async todayAttendanceSummary(
+    @CurrentWorkspace() workspaceId: string,
+  ) {
+    return this.sessionService.getTodayAttendanceSummary(workspaceId);
   }
 
   @Query(() => DayDetailResult, { description: '특정 멤버의 특정 날짜 상세 조회' })
+  @UseGuards(WorkspaceGuard)
   async dayDetail(
     @Args('memberId', { type: () => ID }) memberId: string,
     @Args('date') date: string,
@@ -45,6 +53,7 @@ export class SessionResolver {
   }
 
   @Query(() => [CalendarDay], { description: '특정 멤버의 월간 캘린더' })
+  @UseGuards(WorkspaceGuard)
   async calendar(
     @Args('memberId', { type: () => ID }) memberId: string,
     @Args('year', { type: () => Int }) year: number,
@@ -54,22 +63,27 @@ export class SessionResolver {
   }
 
   @Query(() => MonthlySummaryResult, { description: '특정 멤버의 월간 요약' })
+  @UseGuards(WorkspaceGuard)
   async monthlySummary(
     @Args('memberId', { type: () => ID }) memberId: string,
     @Args('year', { type: () => Int }) year: number,
     @Args('month', { type: () => Int }) month: number,
+    @CurrentWorkspace() workspaceId: string,
   ) {
-    return this.sessionService.getMonthlySummary(memberId, year, month);
+    return this.sessionService.getMonthlySummary(memberId, year, month, workspaceId);
   }
 
   @Mutation(() => Session, { description: '체크인 (지각 자동 감지)' })
+  @UseGuards(WorkspaceGuard)
   async checkIn(
     @Args('memberId', { type: () => ID }) memberId: string,
+    @CurrentWorkspace() workspaceId: string,
   ): Promise<SessionEntity> {
-    return this.sessionService.checkIn(memberId);
+    return this.sessionService.checkIn(memberId, workspaceId);
   }
 
   @Mutation(() => Session, { description: '체크아웃' })
+  @UseGuards(WorkspaceGuard)
   async checkOut(
     @Args('memberId', { type: () => ID }) memberId: string,
   ): Promise<SessionEntity> {

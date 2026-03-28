@@ -1,3 +1,7 @@
+export { UserEntity } from './user.entity';
+export { WorkspaceEntity } from './workspace.entity';
+export { WorkspaceMemberEntity } from './workspace-member.entity';
+export { InviteEntity } from './invite.entity';
 export { MemberEntity } from './member.entity';
 export { SessionEntity } from './session.entity';
 export { DailyVacationEntity } from './daily-vacation.entity';

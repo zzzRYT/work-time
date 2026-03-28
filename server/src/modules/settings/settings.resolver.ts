@@ -1,47 +1,61 @@
 import { Resolver, Query, Mutation, Args, ID, Int, ResolveField, Parent } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import type { SettingsEntity } from '../../entities/settings.entity';
 import { Settings } from './dto/settings.object';
 import { SettingsService } from './settings.service';
 import { MemberRole } from '../member/enums/member-role.enum';
 import { Member } from '../member/dto/member.object';
+import { WorkspaceGuard } from '../auth/workspace.guard';
+import { CurrentWorkspace } from '../auth/decorators/current-workspace.decorator';
 
 @Resolver(() => Settings)
 export class SettingsResolver {
   constructor(private readonly settingsService: SettingsService) {}
 
   @Query(() => Settings, { description: '현재 설정 조회' })
-  async settings(): Promise<SettingsEntity> {
-    return this.settingsService.getSettings();
+  @UseGuards(WorkspaceGuard)
+  async settings(
+    @CurrentWorkspace() workspaceId: string,
+  ): Promise<SettingsEntity> {
+    return this.settingsService.getSettings(workspaceId);
   }
 
   @Mutation(() => Member, { description: '멤버 역할 변경 (ADMIN 또는 MEMBER)' })
+  @UseGuards(WorkspaceGuard)
   async updateMemberRole(
     @Args('memberId', { type: () => ID }) memberId: string,
     @Args('role', { type: () => MemberRole }) role: MemberRole,
+    @CurrentWorkspace() workspaceId: string,
   ) {
-    return this.settingsService.updateMemberRole(memberId, role);
+    return this.settingsService.updateMemberRole(memberId, role, workspaceId);
   }
 
   @Mutation(() => Settings, { description: '출근 시간 변경' })
+  @UseGuards(WorkspaceGuard)
   async updateStudyStartTime(
     @Args('hour', { type: () => Int }) hour: number,
     @Args('minute', { type: () => Int }) minute: number,
+    @CurrentWorkspace() workspaceId: string,
   ): Promise<SettingsEntity> {
-    return this.settingsService.updateStudyStartTime(hour, minute);
+    return this.settingsService.updateStudyStartTime(workspaceId, hour, minute);
   }
 
   @Mutation(() => Settings, { description: '지각비 변경' })
+  @UseGuards(WorkspaceGuard)
   async updateLateFeeAmount(
     @Args('amount', { type: () => Int }) amount: number,
+    @CurrentWorkspace() workspaceId: string,
   ): Promise<SettingsEntity> {
-    return this.settingsService.updateLateFeeAmount(amount);
+    return this.settingsService.updateLateFeeAmount(workspaceId, amount);
   }
 
   @Mutation(() => Settings, { description: '월회비 변경' })
+  @UseGuards(WorkspaceGuard)
   async updateMonthlyFeeAmount(
     @Args('amount', { type: () => Int }) amount: number,
+    @CurrentWorkspace() workspaceId: string,
   ): Promise<SettingsEntity> {
-    return this.settingsService.updateMonthlyFeeAmount(amount);
+    return this.settingsService.updateMonthlyFeeAmount(workspaceId, amount);
   }
 
   @ResolveField(() => String, { description: '마지막 수정 시각' })

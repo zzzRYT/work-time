@@ -3,12 +3,15 @@ import {
   PrimaryColumn,
   Column,
   UpdateDateColumn,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
+import { WorkspaceEntity } from './workspace.entity';
 
 @Entity('settings')
 export class SettingsEntity {
-  @PrimaryColumn({ type: 'varchar', length: 20, default: 'default' })
-  id!: string;
+  @PrimaryColumn({ type: 'uuid', name: 'workspace_id' })
+  workspaceId!: string;
 
   @Column({ type: 'integer', name: 'study_start_hour', default: 10 })
   studyStartHour!: number;
@@ -24,4 +27,8 @@ export class SettingsEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
+
+  @OneToOne(() => WorkspaceEntity, (ws) => ws.settings)
+  @JoinColumn({ name: 'workspace_id' })
+  workspace!: WorkspaceEntity;
 }

@@ -26,6 +26,9 @@ export class MemberEntity {
   @Column({ type: 'varchar', length: 20, default: 'MEMBER' })
   role!: string;
 
+  @Column({ type: 'uuid', name: 'workspace_id' })
+  workspaceId!: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 

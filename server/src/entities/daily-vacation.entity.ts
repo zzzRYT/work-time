@@ -23,6 +23,9 @@ export class DailyVacationEntity {
   @Column({ type: 'integer' })
   hours!: number;
 
+  @Column({ type: 'uuid', name: 'workspace_id' })
+  workspaceId!: string;
+
   @ManyToOne(() => MemberEntity, (member) => member.dailyVacations)
   @JoinColumn({ name: 'member_id' })
   member!: MemberEntity;

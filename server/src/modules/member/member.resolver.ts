@@ -1,16 +1,22 @@
 import { Resolver, Query, ResolveField, Parent, Int } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
 import type { MemberEntity } from '../../entities/member.entity';
 import { Member } from './dto/member.object';
 import { MemberService } from './member.service';
 import { AttendanceStatus } from '../../common/enums';
+import { WorkspaceGuard } from '../auth/workspace.guard';
+import { CurrentWorkspace } from '../auth/decorators/current-workspace.decorator';
 
 @Resolver(() => Member)
 export class MemberResolver {
   constructor(private readonly memberService: MemberService) {}
 
   @Query(() => [Member], { description: '전체 멤버 목록 조회' })
-  async members(): Promise<MemberEntity[]> {
-    return this.memberService.findAll();
+  @UseGuards(WorkspaceGuard)
+  async members(
+    @CurrentWorkspace() workspaceId: string,
+  ): Promise<MemberEntity[]> {
+    return this.memberService.findAll(workspaceId);
   }
 
   @ResolveField(() => AttendanceStatus, { description: '오늘의 출석 상태' })
