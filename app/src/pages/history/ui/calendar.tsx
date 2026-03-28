@@ -50,14 +50,14 @@ export function Calendar({
   const hasRecords = days.some((d) => d.status !== "NOT_ATTENDED");
 
   return (
-    <View className={cn("bg-white rounded-2xl p-4", className)}>
+    <View className={cn("bg-surface rounded-lg p-4", className)}>
       <View className="flex-row mb-2">
         {WEEKDAYS.map((w, i) => (
           <View key={w} className="flex-1 items-center">
             <Text
               className={cn(
                 "text-xs font-medium",
-                i === 0 ? "text-red-400" : i === 6 ? "text-blue-400" : "text-gray-400"
+                i === 0 ? "text-late" : i === 6 ? "text-vacation" : "text-text-subtle"
               )}
             >
               {w}
@@ -68,7 +68,7 @@ export function Calendar({
 
       {!hasRecords && days.length === 0 ? (
         <View className="items-center py-8">
-          <Text className="text-gray-400 text-sm">기록이 없습니다</Text>
+          <Text className="text-text-subtle text-sm">기록이 없습니다</Text>
         </View>
       ) : (
         <View className="flex-row flex-wrap">
@@ -91,17 +91,17 @@ export function Calendar({
                 <View
                   className={cn(
                     "flex-1 rounded-md items-center justify-center",
-                    blockColor ?? "bg-gray-50",
+                    blockColor ?? "bg-surface",
                     isSelected && "ring-2 ring-primary border-2 border-primary",
-                    isToday && !isSelected && "border-2 border-gray-800"
+                    isToday && !isSelected && "border-2 border-text-primary"
                   )}
                 >
                   <Text
                     className={cn(
                       "text-xs",
-                      blockColor ? "text-white font-bold" : "text-gray-600",
+                      blockColor ? "text-white font-bold" : "text-text-muted",
                       isSelected && "text-primary font-bold",
-                      isToday && !isSelected && "font-bold text-gray-900"
+                      isToday && !isSelected && "font-bold text-text-primary"
                     )}
                   >
                     {day}

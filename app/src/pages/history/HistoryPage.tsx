@@ -3,7 +3,7 @@ import { ActivityIndicator, Text, View } from "react-native";
 import { useQuery } from "@apollo/client";
 import { graphql } from "@graphql";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useMemberStore } from "@shared/store/member";
+import { useAuthStore } from "@shared/store/auth";
 import { HistoryContent } from "./ui/history-content";
 
 const CALENDAR_QUERY = graphql(`
@@ -46,7 +46,7 @@ function getKSTNow() {
 
 export function HistoryPage() {
   const kst = getKSTNow();
-  const selectedMemberId = useMemberStore((s) => s.selectedMemberId);
+  const selectedMemberId = useAuthStore((s) => s.memberId);
   const [year, setYear] = useState(kst.getUTCFullYear());
   const [month, setMonth] = useState(kst.getUTCMonth() + 1);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -91,19 +91,19 @@ export function HistoryPage() {
 
   if (calendarLoading && !calendarData) {
     return (
-      <SafeAreaView className="flex-1 bg-surface items-center justify-center">
-        <ActivityIndicator size="large" color="#6366F1" />
+      <SafeAreaView className="flex-1 bg-bg items-center justify-center">
+        <ActivityIndicator size="large" color="#0D9488" />
       </SafeAreaView>
     );
   }
 
   if (calendarError) {
     return (
-      <SafeAreaView className="flex-1 bg-surface items-center justify-center px-4">
-        <Text className="text-red-500 text-base text-center">
+      <SafeAreaView className="flex-1 bg-bg items-center justify-center px-4">
+        <Text className="text-late text-base text-center">
           기록을 불러올 수 없습니다
         </Text>
-        <Text className="text-gray-400 text-sm mt-2 text-center">
+        <Text className="text-text-subtle text-sm mt-2 text-center">
           {calendarError.message}
         </Text>
       </SafeAreaView>

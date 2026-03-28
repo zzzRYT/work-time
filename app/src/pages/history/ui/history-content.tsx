@@ -56,9 +56,9 @@ export function HistoryContent({
   onNextMonth,
 }: HistoryContentProps) {
   return (
-    <SafeAreaView className="flex-1 bg-surface">
+    <SafeAreaView className="flex-1 bg-bg">
       <ScrollView className="flex-1 px-4 pt-4">
-        <Text className="text-2xl font-bold text-gray-900 mb-4">내 기록</Text>
+        <Text className="text-2xl font-bold text-text-primary mb-4">내 기록</Text>
 
         <View className="flex-row items-center justify-center gap-4 mb-4">
           <Pressable onPress={onPrevMonth}>

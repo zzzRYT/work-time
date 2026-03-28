@@ -11,8 +11,8 @@ type ToastProps = {
 };
 
 const BG_COLOR = {
-  error: "bg-red-500",
-  success: "bg-green-500",
+  error: "bg-late",
+  success: "bg-studying",
 };
 
 export function Toast({

@@ -14,7 +14,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   splash: {
     image: "./assets/splash-icon.png",
     resizeMode: "contain",
-    backgroundColor: "#ffffff",
+    backgroundColor: "#FFFBF5",
   },
   ios: {
     supportsTablet: true,
@@ -50,5 +50,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   extra: {
     apiUrl: process.env.API_URL || "http://localhost:4000/graphql",
+    supabaseUrl: process.env.SUPABASE_URL || "",
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || "",
   },
 });

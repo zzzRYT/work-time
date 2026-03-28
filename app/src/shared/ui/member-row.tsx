@@ -46,15 +46,15 @@ export function MemberRow({
           </Text>
         </View>
         {status === "STUDYING" && (
-          <View className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-studying border-2 border-white" />
+          <View className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-studying border-2 border-surface" />
         )}
       </View>
       <View className="flex-1">
-        <Text className="text-base font-medium text-gray-900">
+        <Text className="text-base font-medium text-text-primary">
           {displayName}
         </Text>
         {studyMinutes != null && studyMinutes > 0 && (
-          <Text className="text-xs text-gray-500">
+          <Text className="text-xs text-text-muted">
             {formatStudyTime(studyMinutes)}
           </Text>
         )}
