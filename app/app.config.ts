@@ -50,7 +50,10 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ],
   extra: {
     apiUrl: process.env.API_URL || "http://localhost:4000/graphql",
-    supabaseUrl: process.env.SUPABASE_URL || "",
-    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || "",
+    supabaseUrl: process.env.SUPABASE_URL || "https://jsdbkcxzifftzbvjsdqd.supabase.co",
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpzZGJrY3h6aWZmdHpidmpzZHFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTY1MTMsImV4cCI6MjA5MDIzMjUxM30.pggPnVZh5mC5r-f2HteQScasn0_cBE3pQuhaNj7YqR4",
+    eas: {
+      projectId: "d6e2f9d8-eb0c-46e7-8140-bb6e91f7cbb5",
+    },
   },
 });
