@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ScrollView, Text } from "react-native";
+import { ScrollView, Text, View } from "react-native";
 import { useQuery, useMutation } from "@apollo/client";
 import { graphql } from "@graphql";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -93,7 +93,8 @@ const REJECT_FEE_PAYMENT = graphql(`
 export function SettingsPage() {
   const currentMonth = getCurrentMonth();
   const memberId = useAuthStore((s) => s.memberId);
-  const { data, loading } = useQuery(SETTINGS_QUERY, {
+  const session = useAuthStore((s) => s.session);
+  const { data, loading, error } = useQuery(SETTINGS_QUERY, {
     variables: { month: currentMonth },
   });
   const [updateMemberRole] = useMutation(UPDATE_MEMBER_ROLE);
@@ -106,18 +107,12 @@ export function SettingsPage() {
     variant: "error" | "success";
   } | null>(null);
 
-  if (loading && !data) {
-    return (
-      <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <Text className="text-text-subtle">로딩중...</Text>
-      </SafeAreaView>
-    );
-  }
-
   const members = data?.members ?? [];
   const settings = data?.settings;
   const currentMember = members.find((m) => m.id === memberId);
   const isAdmin = currentMember?.role === "ADMIN";
+
+  const fallbackName = session?.user?.email?.split("@")[0] ?? "사용자";
 
   const pendingItems: PendingItem[] = [];
   for (const e of data?.feeStatus ?? []) {
@@ -229,12 +224,24 @@ export function SettingsPage() {
       <ScrollView className="flex-1 px-4 pt-4">
         <Text className="text-2xl font-bold text-text-primary mb-4">설정</Text>
 
-        {currentMember && (
-          <ProfileSection
-            memberName={currentMember.displayName}
-            memberColor={currentMember.color}
-            className="mb-4"
-          />
+        <ProfileSection
+          memberName={currentMember?.displayName ?? fallbackName}
+          memberColor={currentMember?.color ?? "#A8A29E"}
+          className="mb-4"
+        />
+
+        {loading && !data && (
+          <View className="bg-surface rounded-lg p-6 border border-border items-center mb-4">
+            <Text className="text-text-subtle text-sm">로딩중...</Text>
+          </View>
+        )}
+
+        {error && !data && (
+          <View className="bg-surface rounded-lg p-6 border border-border items-center mb-4">
+            <Text className="text-text-subtle text-sm">
+              설정을 불러올 수 없습니다
+            </Text>
+          </View>
         )}
 
         {isAdmin && <InviteSection className="mb-4" />}
