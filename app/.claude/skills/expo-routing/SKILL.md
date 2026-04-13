@@ -55,3 +55,8 @@ router.back();                    // 뒤로가기
 - `app.config.js`에서 `scheme` 설정
 - `unstable_settings`의 `anchor`로 딥링크 진입 시 뒤로가기 목적지 지정
 - 레이아웃에서 `<Redirect>`로 인증/온보딩 가드
+
+## 경로 설계 원칙
+
+새 라우트 경로를 설계할 때는 반드시 `docs/conventions/route-design.md`를 참조한다.
+핵심: 도메인 기반 최상위 경로, 리소스=명사 / 플로우=동사, 네이밍 일관성, 의미적 소속.

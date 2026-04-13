@@ -1,0 +1,24 @@
+{
+  "env": {
+    "MAX_THINKING_TOKENS": "10000",
+    "CLAUDE_AUTOCOMPACT_PCT_OVERRIDE": "50",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "haiku"
+  },
+  "model": "sonnet",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cmd=$(jq -r .tool_input.command); if [[ \"$cmd\" == *\"app/\"* || \"$PWD\" == *\"/app\" ]] && [[ \"$cmd\" =~ (^|[[:space:]]|&&|;|\\|)(npm|pnpm|yarn)([[:space:]]|$) ]]; then echo \"BLOCKED: app/ 는 Bun 사용 — npm/pnpm/yarn 금지 (Golden Rule #tooling)\" >&2; exit 2; fi; if [[ \"$cmd\" == *\"server/\"* || \"$PWD\" == *\"/server\" ]] && [[ \"$cmd\" =~ (^|[[:space:]]|&&|;|\\|)bun([[:space:]]|$) ]]; then echo \"BLOCKED: server/ 는 npm 사용 — bun 금지 (Golden Rule #tooling)\" >&2; exit 2; fi; exit 0'"
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {
+    "everything-claude-code@everything-claude-code": true
+  }
+}
