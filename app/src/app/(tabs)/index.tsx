@@ -1,1 +1,1 @@
-export { DashboardPage as default } from "@pages/dashboard";
+export { HomePage as default } from "@pages/home";

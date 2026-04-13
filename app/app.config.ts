@@ -1,0 +1,59 @@
+import { ExpoConfig, ConfigContext } from "expo/config";
+
+const IS_DEV = process.env.APP_VARIANT === "development";
+
+export default ({ config }: ConfigContext): ExpoConfig => ({
+  ...config,
+  name: IS_DEV ? "WorkTime (Dev)" : "WorkTime",
+  slug: "work-time",
+  scheme: "work-time",
+  version: "1.0.0",
+  orientation: "portrait",
+  icon: "./assets/icon.png",
+  userInterfaceStyle: "light",
+  splash: {
+    image: "./assets/splash-icon.png",
+    resizeMode: "contain",
+    backgroundColor: "#FFFBF5",
+  },
+  ios: {
+    supportsTablet: true,
+    bundleIdentifier: IS_DEV ? "com.worktime.dev" : "com.worktime.app",
+  },
+  android: {
+    adaptiveIcon: {
+      backgroundColor: "#E6F4FE",
+      foregroundImage: "./assets/android-icon-foreground.png",
+      backgroundImage: "./assets/android-icon-background.png",
+      monochromeImage: "./assets/android-icon-monochrome.png",
+    },
+    package: IS_DEV ? "com.worktime.dev" : "com.worktime.app",
+  },
+  web: {
+    favicon: "./assets/favicon.png",
+  },
+  updates: {
+    url: `https://u.expo.dev/${process.env.EXPO_PROJECT_ID}`,
+    fallbackToCacheTimeout: 0,
+  },
+  runtimeVersion: {
+    policy: "appVersion" as const,
+  },
+  plugins: [
+    "expo-router",
+    "expo-asset",
+    "expo-updates",
+    [
+      "@sentry/react-native/expo",
+      { organization: "your-org", project: "worktime-app" },
+    ],
+  ],
+  extra: {
+    apiUrl: process.env.API_URL || "http://localhost:4000/graphql",
+    supabaseUrl: process.env.SUPABASE_URL || "https://jsdbkcxzifftzbvjsdqd.supabase.co",
+    supabaseAnonKey: process.env.SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpzZGJrY3h6aWZmdHpidmpzZHFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTY1MTMsImV4cCI6MjA5MDIzMjUxM30.pggPnVZh5mC5r-f2HteQScasn0_cBE3pQuhaNj7YqR4",
+    eas: {
+      projectId: "d6e2f9d8-eb0c-46e7-8140-bb6e91f7cbb5",
+    },
+  },
+});

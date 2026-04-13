@@ -39,6 +39,13 @@ android/.gradle/
 *.swo
 *~
 
+# Google Play Service Account
+google-service-account.json
+
 # OS
 .DS_Store
 Thumbs.db
+.gstack/
+
+# Claude Code worktrees
+.claude/worktrees/

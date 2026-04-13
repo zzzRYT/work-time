@@ -39,8 +39,8 @@ export function DayDetail({
   const hasActiveSession = sessions.some((s) => !s.checkOutTime);
 
   return (
-    <View className={cn("bg-white rounded-2xl p-4", className)}>
-      <Text className="text-base font-semibold text-gray-900 mb-3">
+    <View className={cn("bg-surface rounded-lg p-4", className)}>
+      <Text className="text-base font-semibold text-text-primary mb-3">
         {date}
       </Text>
 
@@ -55,7 +55,7 @@ export function DayDetail({
 
       {sessions.length === 0 ? (
         <View className="items-center py-6">
-          <Text className="text-gray-400 text-sm">기록이 없습니다</Text>
+          <Text className="text-text-subtle text-sm">기록이 없습니다</Text>
         </View>
       ) : (
         sessions.map((s) => {
@@ -63,7 +63,7 @@ export function DayDetail({
           return (
             <View
               key={s.id}
-              className="flex-row items-center py-2.5 border-b border-gray-100"
+              className="flex-row items-center py-2.5 border-b border-border"
             >
               {s.isLate && (
                 <StatusBadge status="LATE" className="mr-2" />
@@ -71,7 +71,7 @@ export function DayDetail({
               <Text
                 className={cn(
                   "text-sm flex-1",
-                  isActive ? "text-studying font-medium" : "text-gray-700"
+                  isActive ? "text-studying font-medium" : "text-text-primary"
                 )}
               >
                 {formatTime(s.checkInTime)} →{" "}
@@ -85,7 +85,7 @@ export function DayDetail({
                 <Text
                   className={cn(
                     "text-sm",
-                    isActive ? "text-studying" : "text-gray-500"
+                    isActive ? "text-studying" : "text-text-muted"
                   )}
                 >
                   {formatDuration(s.durationMinutes)}
@@ -97,8 +97,8 @@ export function DayDetail({
         })
       )}
 
-      <View className="flex-row items-center justify-between mt-3 pt-3 border-t border-gray-200">
-        <Text className="text-sm font-medium text-gray-700">합계</Text>
+      <View className="flex-row items-center justify-between mt-3 pt-3 border-t border-border">
+        <Text className="text-sm font-medium text-text-primary">합계</Text>
         <Text className="text-sm font-bold text-primary">
           {formatDuration(totalDurationMinutes)}
           {hasActiveSession && "~"}

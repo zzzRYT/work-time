@@ -115,6 +115,60 @@ const soldier = readFragment(SOLDIER_FRAGMENT, data);
 | 반드시 최신이어야 함 | `network-only` |
 | presigned URL 등 부수효과 | `no-cache` |
 
+## Fetcher Container 패턴
+
+페이지 단위 데이터 로딩은 Fetcher Container로 경계를 나눈다.
+
+```
+pages/{page}/
+├── index.tsx                 진입점 → <FetchXxx />
+├── api/
+│   ├── queries.ts            공유 쿼리만 (GET)
+│   └── index.ts
+├── model/
+│   ├── {page}.ts             타입 + 변환 함수 (toDashboardData 등)
+│   └── index.ts
+└── ui/
+    ├── fetch-{page}.tsx      Fetcher Container (쿼리, loading/error/null 분기, 변환)
+    ├── {page}-content.tsx    Content (순수 UI, Apollo import 없음)
+    ├── some-card.tsx         하위 컴포넌트 (자체 mutation co-locate 가능)
+    └── ...
+```
+
+**Fetcher Container 역할:**
+1. `api/queries.ts`에서 공유 쿼리 실행
+2. loading → 로딩 UI / null → 에러 UI + refetch
+3. `model/`의 변환 함수로 raw → 도메인 데이터
+4. Content에 깨끗한 데이터만 props 전달
+
+**Mutation은 중앙화하지 않는다:**
+- GET 쿼리 → `api/queries.ts` (여러 컴포넌트가 공유)
+- DELETE/UPDATE mutation → 해당 ui 컴포넌트에 co-locate (그 컴포넌트에서만 사용)
+
+```tsx
+// ui/fetch-dashboard.tsx — Fetcher Container
+export function FetchDashboard() {
+  const { data, loading } = useQuery(DASHBOARD_QUERY, { ... });
+
+  if (loading && !data) return <Loading />;
+  if (data == null) return <Error onRetry={refetch} />;
+
+  const dashboardData = toDashboardData(data, ...);
+  return <DashboardContent data={dashboardData} />;
+}
+
+// ui/dashboard-content.tsx — Content (Apollo 의존 없음)
+export function DashboardContent({ data }: { data: DashboardData }) {
+  return (
+    <>
+      <AttendanceCard memberId={data.me?.id} ... />  {/* 자체 mutation */}
+      <VacationButton memberId={data.me?.id} ... />  {/* 자체 mutation */}
+      <StudyingMembers members={data.members} />      {/* mutation 없음 */}
+    </>
+  );
+}
+```
+
 ## Fetcher 위치 결정
 
 ```

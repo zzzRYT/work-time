@@ -1,0 +1,32 @@
+name: App Build
+
+on:
+  push:
+    branches: [main]
+    paths: [app/**]
+  pull_request:
+    branches: [main]
+    paths: [app/**]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: cd app && bun install --frozen-lockfile
+
+      - name: Build Android (preview)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: cd app && eas build --platform android --profile preview --non-interactive

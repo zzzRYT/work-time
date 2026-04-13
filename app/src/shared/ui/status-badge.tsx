@@ -5,11 +5,11 @@ import { cn } from "@shared/lib/cn";
 const badgeVariants = cva("rounded-full px-3 py-1", {
   variants: {
     status: {
-      NOT_ATTENDED: "bg-gray-100",
-      STUDYING: "bg-studying/20",
-      COMPLETED: "bg-done/20",
-      LATE: "bg-late/20",
-      VACATION: "bg-vacation/20",
+      NOT_ATTENDED: "bg-done-bg",
+      STUDYING: "bg-studying-bg",
+      COMPLETED: "bg-done-bg",
+      LATE: "bg-late-bg",
+      VACATION: "bg-vacation-bg",
     },
   },
   defaultVariants: {
@@ -20,7 +20,7 @@ const badgeVariants = cva("rounded-full px-3 py-1", {
 const textVariants = cva("text-xs font-semibold", {
   variants: {
     status: {
-      NOT_ATTENDED: "text-gray-500",
+      NOT_ATTENDED: "text-text-muted",
       STUDYING: "text-studying",
       COMPLETED: "text-done",
       LATE: "text-late",
