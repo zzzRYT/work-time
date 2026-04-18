@@ -9,9 +9,9 @@
       "distribution": "internal",
       "env": {
         "APP_VARIANT": "development",
-        "API_URL": "http://localhost:4000/graphql",
-        "SUPABASE_URL": "https://jsdbkcxzifftzbvjsdqd.supabase.co",
-        "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpzZGJrY3h6aWZmdHpidmpzZHFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTY1MTMsImV4cCI6MjA5MDIzMjUxM30.pggPnVZh5mC5r-f2HteQScasn0_cBE3pQuhaNj7YqR4"
+        "API_URL": "https://work-time-production.up.railway.app/graphql",
+        "SUPABASE_URL": "https://uoxfcfdqtjmbpxjsboep.supabase.co",
+        "SUPABASE_ANON_KEY": "sb_publishable_1ZrxxRIYJkAMb9Y2zoyA_g_Wk9nF_1f"
       }
     },
     "preview": {
@@ -19,14 +19,14 @@
       "channel": "preview",
       "env": {
         "APP_VARIANT": "production",
-        "API_URL": "https://your-railway-app.railway.app/graphql"
+        "API_URL": "https://work-time-production.up.railway.app/graphql"
       }
     },
     "production": {
       "channel": "production",
       "env": {
         "APP_VARIANT": "production",
-        "API_URL": "https://your-railway-app.railway.app/graphql"
+        "API_URL": "https://work-time-production.up.railway.app/graphql"
       },
       "android": {
         "buildType": "app-bundle"
