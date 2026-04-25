@@ -17,7 +17,7 @@ const badgeVariants = cva("rounded-full px-3 py-1", {
   },
 });
 
-const textVariants = cva("text-xs font-semibold", {
+const textVariants = cva("text-[12px] font-semibold", {
   variants: {
     status: {
       NOT_ATTENDED: "text-text-muted",

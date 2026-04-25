@@ -10,8 +10,8 @@
       "env": {
         "APP_VARIANT": "development",
         "API_URL": "https://work-time-production.up.railway.app/graphql",
-        "SUPABASE_URL": "https://uoxfcfdqtjmbpxjsboep.supabase.co",
-        "SUPABASE_ANON_KEY": "sb_publishable_1ZrxxRIYJkAMb9Y2zoyA_g_Wk9nF_1f"
+        "SUPABASE_URL": "https://jsdbkcxzifftzbvjsdqd.supabase.co",
+        "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpzZGJrY3h6aWZmdHpidmpzZHFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2NTY1MTMsImV4cCI6MjA5MDIzMjUxM30.pggPnVZh5mC5r-f2HteQScasn0_cBE3pQuhaNj7YqR4"
       }
     },
     "preview": {

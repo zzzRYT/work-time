@@ -27,7 +27,10 @@ export function ProfileSection({ memberName, memberColor, className }: ProfileSe
 
   return (
     <View className={className}>
-      <View className="bg-surface rounded-lg p-4 border border-border">
+      <View
+        className="bg-surface rounded-lg p-4 border border-border"
+        style={{ shadowColor: "#2C1F14", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 }}
+      >
         <View className="flex-row items-center mb-4">
           <View
             className="w-12 h-12 rounded-full items-center justify-center mr-3"

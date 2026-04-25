@@ -21,7 +21,10 @@ export function PresenceList({ members, className }: PresenceListProps) {
   const others = members.filter((m) => m.currentStatus !== "STUDYING");
 
   return (
-    <View className={cn("bg-surface rounded-lg p-4 border border-border", className)}>
+    <View
+      className={cn("bg-surface rounded-lg p-4 border border-border", className)}
+      style={{ shadowColor: "#2C1F14", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 }}
+    >
       <View className="flex-row items-center gap-2 mb-3 px-1">
         <Text className="text-[15px] font-semibold text-text-primary">
           지금 공부 중

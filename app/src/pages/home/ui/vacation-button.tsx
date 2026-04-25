@@ -74,8 +74,8 @@ export function VacationButton({
       </View>
 
       {selected === FULL_DAY_VACATION_HOURS && (
-        <View className="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mb-3">
-          <Text className="text-yellow-700 text-xs">
+        <View className="bg-vacation-bg border border-vacation/30 rounded-lg px-3 py-2 mb-3">
+          <Text className="text-vacation text-xs">
             전일 휴가로 처리되며, 오늘 체크인이 불가합니다
           </Text>
         </View>
@@ -101,7 +101,7 @@ export function VacationButton({
           setSelected(null);
         }}
       >
-        <Text className="text-gray-500 text-sm">취소</Text>
+        <Text className="text-text-muted text-sm">취소</Text>
       </Pressable>
     </View>
   );

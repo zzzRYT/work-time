@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { useQuery, useMutation } from "@apollo/client";
 import { graphql } from "@graphql";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -96,6 +96,7 @@ export function SettingsPage() {
   const session = useAuthStore((s) => s.session);
   const { data, loading, error } = useQuery(SETTINGS_QUERY, {
     variables: { month: currentMonth },
+    fetchPolicy: "cache-and-network",
   });
   const [updateMemberRole] = useMutation(UPDATE_MEMBER_ROLE);
   const [updateStudyStartTime] = useMutation(UPDATE_STUDY_START_TIME);
@@ -226,13 +227,13 @@ export function SettingsPage() {
 
         <ProfileSection
           memberName={currentMember?.displayName ?? fallbackName}
-          memberColor={currentMember?.color ?? "#A8A29E"}
+          memberColor={currentMember?.color ?? "#B8A898"}
           className="mb-4"
         />
 
         {loading && !data && (
           <View className="bg-surface rounded-lg p-6 border border-border items-center mb-4">
-            <Text className="text-text-subtle text-sm">로딩중...</Text>
+            <ActivityIndicator size="large" color="#F07A5A" />
           </View>
         )}
 

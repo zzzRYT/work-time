@@ -139,7 +139,10 @@ export default function LoginScreen() {
   return (
     <SafeAreaView className="flex-1 bg-bg">
       <View className="flex-1 justify-center px-5">
-        <View className="items-center mb-12">
+        <View className="items-center mb-14">
+          <View className="bg-primary-light rounded-full w-16 h-16 items-center justify-center mb-4">
+            <Text className="text-[28px]">⏱</Text>
+          </View>
           <Text className="text-[32px] font-extrabold text-text-primary mb-2">
             WorkTime
           </Text>
@@ -149,17 +152,17 @@ export default function LoginScreen() {
         </View>
 
         <Pressable
-          className="bg-white border border-border rounded-md py-4 px-6 flex-row items-center justify-center active:bg-surface"
+          className="bg-surface border border-border rounded-lg py-4 px-6 flex-row items-center justify-center active:bg-surface-hover mb-3"
           onPress={() => handleOAuthLogin("google")}
         >
-          <Text className="text-[15px] font-medium text-text-primary">
+          <Text className="text-[15px] font-semibold text-text-primary">
             Google로 시작하기
           </Text>
         </Pressable>
 
         {Platform.OS === "ios" && (
           <Pressable
-            className="bg-black rounded-md py-4 px-6 flex-row items-center justify-center mt-3 active:opacity-80"
+            className="bg-text-primary rounded-lg py-4 px-6 flex-row items-center justify-center active:opacity-80"
             onPress={handleAppleLogin}
           >
             <Text className="text-[15px] font-medium text-white">

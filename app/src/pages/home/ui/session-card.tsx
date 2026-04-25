@@ -13,6 +13,8 @@ type SessionCardProps = {
   onCheckOut: () => void;
   loading: boolean;
   networkOffline: boolean;
+  pendingAction?: "checkin" | "checkout" | null;
+  optimisticCheckInTime?: string | null;
   className?: string;
 };
 
@@ -39,11 +41,21 @@ export function SessionCard({
   onCheckOut,
   loading,
   networkOffline,
+  pendingAction,
+  optimisticCheckInTime,
   className,
 }: SessionCardProps) {
-  const isStudying = status === "STUDYING";
+  const effectiveStatus =
+    pendingAction === "checkin" ? "STUDYING" :
+    pendingAction === "checkout" ? "COMPLETED" :
+    status;
+  const effectiveCheckInTime =
+    pendingAction === "checkin" ? (optimisticCheckInTime ?? null) :
+    pendingAction === "checkout" ? null :
+    checkInTime;
+  const isStudying = effectiveStatus === "STUDYING";
   const isVacation = status === "VACATION" || (vacationHours != null && vacationHours >= 8);
-  const buttonState = getButtonState(status);
+  const buttonState = getButtonState(effectiveStatus);
 
   if (isVacation) {
     return (
@@ -63,6 +75,11 @@ export function SessionCard({
         isStudying ? "bg-primary" : "bg-surface border border-border",
         className
       )}
+      style={
+        !isStudying
+          ? { shadowColor: "#2C1F14", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 2 }
+          : undefined
+      }
     >
       {isLate && (
         <View className="bg-late-bg rounded-full px-3 py-1 mb-4 self-start">
@@ -70,7 +87,7 @@ export function SessionCard({
         </View>
       )}
 
-      <Timer checkInTime={isStudying ? checkInTime : null} className="mb-2" />
+      <Timer checkInTime={isStudying ? effectiveCheckInTime : null} className="mb-2" />
 
       <Text
         className={cn(

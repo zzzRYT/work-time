@@ -92,7 +92,7 @@ export function HistoryPage() {
   if (calendarLoading && !calendarData) {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <ActivityIndicator size="large" color="#0D9488" />
+        <ActivityIndicator size="large" color="#F07A5A" />
       </SafeAreaView>
     );
   }

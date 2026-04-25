@@ -4,6 +4,7 @@ import { useQuery } from "@apollo/client";
 import { graphql } from "@graphql";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getCurrentMonth } from "@shared/lib/date";
+import { ScreenLoader } from "@shared/ui/screen-loader";
 import { RankingList } from "./ui/ranking-list";
 import { FeeSection } from "./ui/fee-section";
 
@@ -48,6 +49,7 @@ export function RankingPage() {
   const currentMonth = getCurrentMonth();
   const { data, loading, refetch } = useQuery(RANKING_QUERY, {
     variables: { month: currentMonth },
+    fetchPolicy: "cache-and-network",
     pollInterval: 30_000,
   });
   const [refreshing, setRefreshing] = useState(false);
@@ -59,11 +61,7 @@ export function RankingPage() {
   }, [refetch]);
 
   if (loading && !data) {
-    return (
-      <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <Text className="text-text-subtle">로딩중...</Text>
-      </SafeAreaView>
-    );
+    return <ScreenLoader />;
   }
 
   return (

@@ -7,6 +7,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "@shared/store/auth";
 import { getTodayString, getCurrentMonth } from "@shared/lib/date";
 import { Toast } from "@shared/ui/toast";
+import { ScreenLoader } from "@shared/ui/screen-loader";
 import { SessionCard } from "./ui/session-card";
 import { VacationButton } from "./ui/vacation-button";
 import { PresenceList } from "./ui/presence-list";
@@ -82,15 +83,20 @@ export function HomePage() {
   const netInfo = useNetInfo();
   const isOffline = netInfo.isConnected === false;
   const [toast, setToast] = useState<{ message: string; variant: "error" | "success" } | null>(null);
+  const [optimisticState, setOptimisticState] = useState<
+    { action: "checkin"; checkInTime: string } | { action: "checkout" } | null
+  >(null);
 
   const { data, loading, refetch } = useQuery(HOME_QUERY, {
     variables: { month: currentMonth },
+    fetchPolicy: "cache-and-network",
     pollInterval: 15_000,
   });
 
   const { data: sessionData, refetch: refetchSession } = useQuery(ACTIVE_SESSION, {
     variables: { memberId: memberId! },
     skip: !memberId,
+    fetchPolicy: "cache-and-network",
     pollInterval: 15_000,
   });
 
@@ -110,11 +116,7 @@ export function HomePage() {
   }, [memberId]);
 
   if (loading && !data) {
-    return (
-      <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <Text className="text-text-subtle">로딩중...</Text>
-      </SafeAreaView>
-    );
+    return <ScreenLoader />;
   }
 
   const members = data?.members ?? [];
@@ -129,19 +131,25 @@ export function HomePage() {
 
   const handleCheckIn = async () => {
     if (!memberId) return;
+    setOptimisticState({ action: "checkin", checkInTime: new Date().toISOString() });
     try {
-      await checkIn({ variables: { memberId }, refetchQueries: refetchAll });
+      await checkIn({ variables: { memberId }, refetchQueries: refetchAll, awaitRefetchQueries: true });
     } catch {
       setToast({ message: "체크인에 실패했습니다", variant: "error" });
+    } finally {
+      setOptimisticState(null);
     }
   };
 
   const handleCheckOut = async () => {
     if (!memberId) return;
+    setOptimisticState({ action: "checkout" });
     try {
-      await checkOut({ variables: { memberId }, refetchQueries: refetchAll });
+      await checkOut({ variables: { memberId }, refetchQueries: refetchAll, awaitRefetchQueries: true });
     } catch {
       setToast({ message: "체크아웃에 실패했습니다", variant: "error" });
+    } finally {
+      setOptimisticState(null);
     }
   };
 
@@ -195,7 +203,10 @@ export function HomePage() {
         </View>
 
         {summary && (
-          <View className="flex-row bg-surface rounded-lg p-3 mb-4 border border-border">
+          <View
+            className="flex-row bg-surface rounded-lg p-3 mb-4 border border-border"
+            style={{ shadowColor: "#2C1F14", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 }}
+          >
             {[
               { label: "전체", value: summary.total, color: "text-text-primary" },
               { label: "출석", value: summary.attended, color: "text-studying" },
@@ -222,6 +233,8 @@ export function HomePage() {
           onCheckOut={handleCheckOut}
           loading={checkInLoading || checkOutLoading}
           networkOffline={isOffline}
+          pendingAction={optimisticState?.action ?? null}
+          optimisticCheckInTime={optimisticState?.action === "checkin" ? optimisticState.checkInTime : null}
           className="mb-4"
         />
 
