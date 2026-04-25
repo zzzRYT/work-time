@@ -1,49 +1,12 @@
 import { useState, useCallback } from "react";
 import { RefreshControl, ScrollView, Text } from "react-native";
 import { useQuery } from "@apollo/client";
-import { graphql } from "@graphql";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { getCurrentMonth } from "@shared/lib/date";
 import { ScreenLoader } from "@shared/ui/screen-loader";
 import { RankingList } from "./ui/ranking-list";
 import { FeeSection } from "./ui/fee-section";
-
-const RANKING_QUERY = graphql(`
-  query RankingPage($month: String!) {
-    feeStatus(month: $month) {
-      member {
-        id
-        displayName
-        color
-      }
-      lateFee
-      monthlyFee
-      monthlyFeeStatus
-      lateFeeStatus
-      lateCount
-    }
-    weekly: memberRanking(period: WEEKLY) {
-      member {
-        id
-        displayName
-        color
-      }
-      totalStudyMinutes
-      attendanceDays
-      lateCount
-    }
-    monthly: memberRanking(period: MONTHLY) {
-      member {
-        id
-        displayName
-        color
-      }
-      totalStudyMinutes
-      attendanceDays
-      lateCount
-    }
-  }
-`);
+import { RANKING_QUERY } from "./api";
 
 export function RankingPage() {
   const currentMonth = getCurrentMonth();

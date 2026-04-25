@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { AppState, ScrollView, Text, View } from "react-native";
 import { useQuery, useMutation } from "@apollo/client";
 import { useNetInfo } from "@react-native-community/netinfo";
-import { graphql } from "@graphql";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "@shared/store/auth";
 import { getTodayString, getCurrentMonth } from "@shared/lib/date";
@@ -12,70 +11,7 @@ import { SessionCard } from "./ui/session-card";
 import { VacationButton } from "./ui/vacation-button";
 import { PresenceList } from "./ui/presence-list";
 import { FeeShortcut } from "./ui/fee-shortcut";
-
-const HOME_QUERY = graphql(`
-  query HomePageData($month: String!) {
-    members {
-      id
-      name
-      displayName
-      color
-      currentStatus
-      todayStudyMinutes
-      todayVacationHours
-    }
-    todayAttendanceSummary {
-      total
-      attended
-      studying
-      late
-    }
-    feeStatus(month: $month) {
-      member { id }
-      lateFee
-      monthlyFee
-      monthlyFeeStatus
-      lateFeeStatus
-      lateCount
-    }
-  }
-`);
-
-const ACTIVE_SESSION = graphql(`
-  query HomeActiveSession($memberId: ID!) {
-    activeSession(memberId: $memberId) {
-      id
-      checkInTime
-      isLate
-    }
-  }
-`);
-
-const CHECK_IN = graphql(`
-  mutation HomeCheckIn($memberId: ID!) {
-    checkIn(memberId: $memberId) { id checkInTime isLate }
-  }
-`);
-
-const CHECK_OUT = graphql(`
-  mutation HomeCheckOut($memberId: ID!) {
-    checkOut(memberId: $memberId) { id checkOutTime }
-  }
-`);
-
-const USE_VACATION = graphql(`
-  mutation HomeUseVacation($memberId: ID!, $date: String!, $hours: Int!) {
-    useVacation(memberId: $memberId, date: $date, hours: $hours) { id hours }
-  }
-`);
-
-const REQUEST_FEE = graphql(`
-  mutation HomeRequestFee($memberId: ID!, $month: String!, $type: FeeType!) {
-    requestFeePayment(memberId: $memberId, month: $month, type: $type) {
-      id monthlyFeeStatus lateFeeStatus
-    }
-  }
-`);
+import { HOME_QUERY, ACTIVE_SESSION, CHECK_IN, CHECK_OUT, USE_VACATION, REQUEST_FEE } from "./api";
 
 export function HomePage() {
   const memberId = useAuthStore((s) => s.memberId);
