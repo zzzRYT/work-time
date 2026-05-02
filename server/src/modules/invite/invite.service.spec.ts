@@ -14,16 +14,17 @@ function makeRepo<T>() {
 
 function makeManager() {
   return {
-    create: jest.fn((entityClass: unknown, attrs: Record<string, unknown>) => {
-      if (entityClass === MemberEntity) {
-        return { id: 'member-created', ...attrs };
+    create: jest.fn((_entityClass: unknown, attrs: Record<string, unknown>) => ({
+      ...attrs,
+    })),
+    save: jest.fn(async (entity: Record<string, unknown>) => {
+      if ('memberId' in entity) {
+        entity.id = 'membership-created';
+      } else {
+        entity.id = 'member-persisted';
       }
-      if (entityClass === WorkspaceMemberEntity) {
-        return { id: 'membership-created', ...attrs };
-      }
-      return { ...attrs };
+      return entity;
     }),
-    save: jest.fn(async (entity: Record<string, unknown>) => entity),
   };
 }
 
@@ -58,7 +59,7 @@ function makeService() {
 
 describe('InviteService.joinByInvite', () => {
   it('rejects missing invite tokens', async () => {
-    const { service, inviteRepo } = makeService();
+    const { service, inviteRepo, dataSource, manager } = makeService();
     inviteRepo.findOne.mockResolvedValue(null);
 
     await expect(
@@ -68,10 +69,13 @@ describe('InviteService.joinByInvite', () => {
     expect(inviteRepo.findOne).toHaveBeenCalledWith({
       where: { token: 'missing-token' },
     });
+    expect(dataSource.transaction).not.toHaveBeenCalled();
+    expect(manager.create).not.toHaveBeenCalled();
+    expect(manager.save).not.toHaveBeenCalled();
   });
 
   it('rejects expired invite tokens', async () => {
-    const { service, inviteRepo } = makeService();
+    const { service, inviteRepo, dataSource, manager } = makeService();
     inviteRepo.findOne.mockResolvedValue({
       id: 'invite-1',
       token: 'expired-token',
@@ -83,10 +87,15 @@ describe('InviteService.joinByInvite', () => {
     await expect(
       service.joinByInvite('expired-token', 'user-1', 'Jaejin'),
     ).rejects.toThrow(BadRequestException);
+
+    expect(dataSource.transaction).not.toHaveBeenCalled();
+    expect(manager.create).not.toHaveBeenCalled();
+    expect(manager.save).not.toHaveBeenCalled();
   });
 
   it('rejects users who already belong to the invited workspace', async () => {
-    const { service, inviteRepo, workspaceMemberRepo } = makeService();
+    const { service, inviteRepo, workspaceMemberRepo, dataSource, manager } =
+      makeService();
     inviteRepo.findOne.mockResolvedValue({
       id: 'invite-1',
       token: 'valid-token',
@@ -107,6 +116,9 @@ describe('InviteService.joinByInvite', () => {
     expect(workspaceMemberRepo.findOne).toHaveBeenCalledWith({
       where: { workspaceId: 'workspace-1', userId: 'user-1' },
     });
+    expect(dataSource.transaction).not.toHaveBeenCalled();
+    expect(manager.create).not.toHaveBeenCalled();
+    expect(manager.save).not.toHaveBeenCalled();
   });
 
   it('creates a member and workspace membership in one transaction', async () => {
@@ -134,7 +146,7 @@ describe('InviteService.joinByInvite', () => {
     expect(manager.create).toHaveBeenCalledWith(WorkspaceMemberEntity, {
       workspaceId: 'workspace-1',
       userId: 'user-1',
-      memberId: 'member-created',
+      memberId: 'member-persisted',
       role: 'MEMBER',
       invitedBy: 'owner-1',
     });
@@ -143,7 +155,7 @@ describe('InviteService.joinByInvite', () => {
       id: 'membership-created',
       workspaceId: 'workspace-1',
       userId: 'user-1',
-      memberId: 'member-created',
+      memberId: 'member-persisted',
       role: 'MEMBER',
     });
   });
