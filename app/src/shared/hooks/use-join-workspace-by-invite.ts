@@ -32,23 +32,28 @@ export function useJoinWorkspaceByInvite() {
         throw new Error("초대 링크가 올바르지 않습니다.");
       }
 
+      let membership;
       try {
         const { data } = await joinWorkspace({ variables: { token } });
-        const membership = data?.joinWorkspace;
+        membership = data?.joinWorkspace;
         if (!membership) {
           throw new Error("워크스페이스 참여에 실패했습니다.");
         }
-
-        setWorkspaceId(membership.workspaceId);
-        setMemberId(membership.memberId);
-        await clearPendingInviteToken();
-        await apolloClient.resetStore();
-        router.replace("/(tabs)");
-
-        return membership;
       } catch (error) {
         throw new Error(getJoinWorkspaceErrorMessage(error));
       }
+
+      setWorkspaceId(membership.workspaceId);
+      setMemberId(membership.memberId);
+      await clearPendingInviteToken().catch(() => {});
+      try {
+        await apolloClient.resetStore();
+      } catch {
+      } finally {
+        router.replace("/(tabs)");
+      }
+
+      return membership;
     },
     [joinWorkspace, setMemberId, setWorkspaceId],
   );
