@@ -1,6 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import {
   INVITE_EXPIRES_IN_HOURS,
+  PENDING_INVITE_TOKEN_KEY,
   buildInviteLink,
   extractInviteToken,
   getJoinWorkspaceErrorMessage,
@@ -12,6 +13,10 @@ const TOKEN =
 describe("invite utilities", () => {
   it("uses a seven day invite window", () => {
     expect(INVITE_EXPIRES_IN_HOURS).toBe(168);
+  });
+
+  it("uses the pending invite token storage key", () => {
+    expect(PENDING_INVITE_TOKEN_KEY).toBe("@work-time/pending-invite-token");
   });
 
   it("builds a join link with the app scheme", () => {
@@ -32,6 +37,10 @@ describe("invite utilities", () => {
 
   it("rejects a token from an arbitrary URL path", () => {
     expect(extractInviteToken(`https://example.com/${TOKEN}`)).toBeNull();
+  });
+
+  it("rejects a token from a nested previous invite path", () => {
+    expect(extractInviteToken(`work-time://invite/anything/${TOKEN}`)).toBeNull();
   });
 
   it("rejects invalid invite input", () => {

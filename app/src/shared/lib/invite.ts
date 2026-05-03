@@ -22,9 +22,9 @@ export function extractInviteToken(input: string) {
     if (queryToken) return queryToken;
 
     if (url.protocol === "work-time:" && url.hostname === "invite") {
-      const pathToken = normalizeToken(
-        url.pathname.split("/").filter(Boolean).at(-1),
-      );
+      const pathSegments = url.pathname.split("/").filter(Boolean);
+      const pathToken =
+        pathSegments.length === 1 ? normalizeToken(pathSegments[0]) : null;
       if (pathToken) return pathToken;
     }
   } catch {
