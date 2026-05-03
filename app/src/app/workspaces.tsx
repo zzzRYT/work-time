@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -51,17 +51,46 @@ export default function WorkspacesScreen() {
   const [newName, setNewName] = useState("");
   const [inviteInput, setInviteInput] = useState("");
   const [creating, setCreating] = useState(false);
+  const actionInFlightRef = useRef(false);
+  const [actionInFlight, setActionInFlight] = useState(false);
 
-  const handleSelect = async (workspaceId: string, memberId: string) => {
+  const beginAction = () => {
+    if (actionInFlightRef.current) return false;
+    actionInFlightRef.current = true;
+    setActionInFlight(true);
+    return true;
+  };
+
+  const endAction = () => {
+    actionInFlightRef.current = false;
+    setActionInFlight(false);
+  };
+
+  const navigateToWorkspace = async (workspaceId: string, memberId: string) => {
     setWorkspaceId(workspaceId);
     setMemberId(memberId);
     await apolloClient.resetStore();
     router.replace("/(tabs)");
   };
 
+  const handleSelect = async (workspaceId: string, memberId: string) => {
+    if (!beginAction()) return;
+    let navigated = false;
+    try {
+      await navigateToWorkspace(workspaceId, memberId);
+      navigated = true;
+    } finally {
+      if (!navigated) {
+        endAction();
+      }
+    }
+  };
+
   const handleCreate = async () => {
     if (!newName.trim()) return;
+    if (!beginAction()) return;
     setCreating(true);
+    let navigated = false;
     try {
       const { data: result } = await createWorkspace({
         variables: { name: newName.trim() },
@@ -73,34 +102,56 @@ export default function WorkspacesScreen() {
           (w) => w.workspaceId === result.createWorkspace.id
         );
         if (newMembership) {
-          await handleSelect(newMembership.workspaceId, newMembership.memberId);
+          await navigateToWorkspace(newMembership.workspaceId, newMembership.memberId);
+          navigated = true;
         }
       }
     } catch (e) {
       Alert.alert("오류", e instanceof Error ? e.message : "워크스페이스 생성 실패");
     } finally {
-      setCreating(false);
+      if (!navigated) {
+        setCreating(false);
+        endAction();
+      }
     }
   };
 
   const handleJoinByInvite = async () => {
+    if (!inviteInput.trim()) return;
+    if (!beginAction()) return;
+    let navigated = false;
     try {
       await joinByInvite(inviteInput);
-      setInviteInput("");
+      navigated = true;
     } catch (e) {
       Alert.alert(
         "초대 참여 실패",
         e instanceof Error ? e.message : "워크스페이스 참여에 실패했습니다",
       );
+    } finally {
+      if (!navigated) {
+        endAction();
+      }
     }
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    await apolloClient.clearStore();
+    if (!beginAction()) return;
+    let signedOut = false;
+    try {
+      await signOut();
+      await apolloClient.clearStore();
+      signedOut = true;
+    } finally {
+      if (!signedOut) {
+        endAction();
+      }
+    }
   };
 
   const workspaces = data?.myWorkspaces ?? [];
+  const createDisabled = actionInFlight || creating || !newName.trim();
+  const inviteDisabled = actionInFlight || joiningByInvite || !inviteInput.trim();
 
   return (
     <SafeAreaView className="flex-1 bg-bg">
@@ -123,6 +174,8 @@ export default function WorkspacesScreen() {
               <Pressable
                 className="bg-surface rounded-lg p-4 border border-border active:bg-surface-hover"
                 onPress={() => handleSelect(item.workspaceId, item.memberId)}
+                disabled={actionInFlight}
+                style={{ opacity: actionInFlight ? 0.5 : 1 }}
               >
                 <Text className="text-[17px] font-medium text-text-primary">
                   워크스페이스
@@ -163,8 +216,8 @@ export default function WorkspacesScreen() {
               <Pressable
                 className="bg-primary rounded-lg py-3 items-center"
                 onPress={handleCreate}
-                disabled={creating || !newName.trim()}
-                style={{ opacity: creating || !newName.trim() ? 0.5 : 1 }}
+                disabled={createDisabled}
+                style={{ opacity: createDisabled ? 0.5 : 1 }}
               >
                 <Text className="text-white font-bold text-[15px]">
                   {creating ? "생성 중..." : "만들기"}
@@ -174,7 +227,13 @@ export default function WorkspacesScreen() {
           ) : (
             <Pressable
               className="mt-6 border-2 border-dashed border-border rounded-lg py-5 items-center active:bg-surface"
-              onPress={() => setShowCreate(true)}
+              onPress={() => {
+                if (!actionInFlightRef.current) {
+                  setShowCreate(true);
+                }
+              }}
+              disabled={actionInFlight}
+              style={{ opacity: actionInFlight ? 0.5 : 1 }}
             >
               <Text className="text-text-muted font-medium text-[15px]">
                 + 새 워크스페이스 만들기
@@ -198,8 +257,8 @@ export default function WorkspacesScreen() {
             <Pressable
               className="bg-primary rounded-lg py-3 items-center"
               onPress={handleJoinByInvite}
-              disabled={joiningByInvite || !inviteInput.trim()}
-              style={{ opacity: joiningByInvite || !inviteInput.trim() ? 0.5 : 1 }}
+              disabled={inviteDisabled}
+              style={{ opacity: inviteDisabled ? 0.5 : 1 }}
             >
               <Text className="text-white font-bold text-[15px]">
                 {joiningByInvite ? "참여 중..." : "참여하기"}
@@ -207,7 +266,12 @@ export default function WorkspacesScreen() {
             </Pressable>
           </View>
 
-          <Pressable className="mb-4 py-3 items-center" onPress={handleSignOut}>
+          <Pressable
+            className="mb-4 py-3 items-center"
+            onPress={handleSignOut}
+            disabled={actionInFlight}
+            style={{ opacity: actionInFlight ? 0.5 : 1 }}
+          >
             <Text className="text-text-subtle text-[13px]">로그아웃</Text>
           </Pressable>
         </KeyboardAvoidingView>
