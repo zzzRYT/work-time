@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { FlatList, Pressable, Text, TextInput, View, Alert } from "react-native";
+import {
+  Alert,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useMutation } from "@apollo/client";
 import { graphql } from "@graphql";
@@ -133,69 +142,75 @@ export default function WorkspacesScreen() {
           />
         )}
 
-        {showCreate ? (
-          <View className="mt-6 bg-surface rounded-lg p-4 border border-border">
+        <KeyboardAvoidingView
+          className="mt-auto"
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={24}
+        >
+          {showCreate ? (
+            <View className="mt-6 bg-surface rounded-lg p-4 border border-border">
+              <Text className="text-[15px] font-medium text-text-primary mb-3">
+                새 워크스페이스 만들기
+              </Text>
+              <TextInput
+                className="border border-border rounded-sm bg-white px-4 py-3 text-[15px] text-text-primary mb-3"
+                placeholder="이름 (예: 모던애자일)"
+                placeholderTextColor="#B8A898"
+                value={newName}
+                onChangeText={setNewName}
+                autoFocus
+              />
+              <Pressable
+                className="bg-primary rounded-lg py-3 items-center"
+                onPress={handleCreate}
+                disabled={creating || !newName.trim()}
+                style={{ opacity: creating || !newName.trim() ? 0.5 : 1 }}
+              >
+                <Text className="text-white font-bold text-[15px]">
+                  {creating ? "생성 중..." : "만들기"}
+                </Text>
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable
+              className="mt-6 border-2 border-dashed border-border rounded-lg py-5 items-center active:bg-surface"
+              onPress={() => setShowCreate(true)}
+            >
+              <Text className="text-text-muted font-medium text-[15px]">
+                + 새 워크스페이스 만들기
+              </Text>
+            </Pressable>
+          )}
+
+          <View className="mt-3 bg-surface rounded-lg p-4 border border-border">
             <Text className="text-[15px] font-medium text-text-primary mb-3">
-              새 워크스페이스 만들기
+              초대 코드로 참여
             </Text>
             <TextInput
               className="border border-border rounded-sm bg-white px-4 py-3 text-[15px] text-text-primary mb-3"
-              placeholder="이름 (예: 모던애자일)"
+              placeholder="초대 링크 또는 코드"
               placeholderTextColor="#B8A898"
-              value={newName}
-              onChangeText={setNewName}
-              autoFocus
+              value={inviteInput}
+              onChangeText={setInviteInput}
+              autoCapitalize="none"
+              autoCorrect={false}
             />
             <Pressable
               className="bg-primary rounded-lg py-3 items-center"
-              onPress={handleCreate}
-              disabled={creating || !newName.trim()}
-              style={{ opacity: creating || !newName.trim() ? 0.5 : 1 }}
+              onPress={handleJoinByInvite}
+              disabled={joiningByInvite || !inviteInput.trim()}
+              style={{ opacity: joiningByInvite || !inviteInput.trim() ? 0.5 : 1 }}
             >
               <Text className="text-white font-bold text-[15px]">
-                {creating ? "생성 중..." : "만들기"}
+                {joiningByInvite ? "참여 중..." : "참여하기"}
               </Text>
             </Pressable>
           </View>
-        ) : (
-          <Pressable
-            className="mt-6 border-2 border-dashed border-border rounded-lg py-5 items-center active:bg-surface"
-            onPress={() => setShowCreate(true)}
-          >
-            <Text className="text-text-muted font-medium text-[15px]">
-              + 새 워크스페이스 만들기
-            </Text>
-          </Pressable>
-        )}
 
-        <View className="mt-3 bg-surface rounded-lg p-4 border border-border">
-          <Text className="text-[15px] font-medium text-text-primary mb-3">
-            초대 코드로 참여
-          </Text>
-          <TextInput
-            className="border border-border rounded-sm bg-white px-4 py-3 text-[15px] text-text-primary mb-3"
-            placeholder="초대 링크 또는 코드"
-            placeholderTextColor="#B8A898"
-            value={inviteInput}
-            onChangeText={setInviteInput}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          <Pressable
-            className="bg-primary rounded-lg py-3 items-center"
-            onPress={handleJoinByInvite}
-            disabled={joiningByInvite || !inviteInput.trim()}
-            style={{ opacity: joiningByInvite || !inviteInput.trim() ? 0.5 : 1 }}
-          >
-            <Text className="text-white font-bold text-[15px]">
-              {joiningByInvite ? "참여 중..." : "참여하기"}
-            </Text>
+          <Pressable className="mb-4 py-3 items-center" onPress={handleSignOut}>
+            <Text className="text-text-subtle text-[13px]">로그아웃</Text>
           </Pressable>
-        </View>
-
-        <Pressable className="mt-auto mb-4 py-3 items-center" onPress={handleSignOut}>
-          <Text className="text-text-subtle text-[13px]">로그아웃</Text>
-        </Pressable>
+        </KeyboardAvoidingView>
       </View>
     </SafeAreaView>
   );
