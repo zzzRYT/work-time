@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "@apollo/client";
 import { graphql } from "@graphql";
 import { useAuthStore } from "@shared/store/auth";
 import { apolloClient } from "@shared/lib/apollo";
+import { useJoinWorkspaceByInvite } from "@shared/hooks/use-join-workspace-by-invite";
 import { router } from "expo-router";
 
 const MY_WORKSPACES = graphql(`
@@ -33,11 +34,13 @@ const CREATE_WORKSPACE = graphql(`
 export default function WorkspacesScreen() {
   const { data, loading, refetch } = useQuery(MY_WORKSPACES);
   const [createWorkspace] = useMutation(CREATE_WORKSPACE);
+  const { joinByInvite, loading: joiningByInvite } = useJoinWorkspaceByInvite();
   const setWorkspaceId = useAuthStore((s) => s.setWorkspaceId);
   const setMemberId = useAuthStore((s) => s.setMemberId);
   const signOut = useAuthStore((s) => s.signOut);
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
+  const [inviteInput, setInviteInput] = useState("");
   const [creating, setCreating] = useState(false);
 
   const handleSelect = async (workspaceId: string, memberId: string) => {
@@ -68,6 +71,18 @@ export default function WorkspacesScreen() {
       Alert.alert("오류", e instanceof Error ? e.message : "워크스페이스 생성 실패");
     } finally {
       setCreating(false);
+    }
+  };
+
+  const handleJoinByInvite = async () => {
+    try {
+      await joinByInvite(inviteInput);
+      setInviteInput("");
+    } catch (e) {
+      Alert.alert(
+        "초대 참여 실패",
+        e instanceof Error ? e.message : "워크스페이스 참여에 실패했습니다",
+      );
     }
   };
 
@@ -152,6 +167,31 @@ export default function WorkspacesScreen() {
             </Text>
           </Pressable>
         )}
+
+        <View className="mt-3 bg-surface rounded-lg p-4 border border-border">
+          <Text className="text-[15px] font-medium text-text-primary mb-3">
+            초대 코드로 참여
+          </Text>
+          <TextInput
+            className="border border-border rounded-sm bg-white px-4 py-3 text-[15px] text-text-primary mb-3"
+            placeholder="초대 링크 또는 코드"
+            placeholderTextColor="#B8A898"
+            value={inviteInput}
+            onChangeText={setInviteInput}
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          <Pressable
+            className="bg-primary rounded-lg py-3 items-center"
+            onPress={handleJoinByInvite}
+            disabled={joiningByInvite || !inviteInput.trim()}
+            style={{ opacity: joiningByInvite || !inviteInput.trim() ? 0.5 : 1 }}
+          >
+            <Text className="text-white font-bold text-[15px]">
+              {joiningByInvite ? "참여 중..." : "참여하기"}
+            </Text>
+          </Pressable>
+        </View>
 
         <Pressable className="mt-auto mb-4 py-3 items-center" onPress={handleSignOut}>
           <Text className="text-text-subtle text-[13px]">로그아웃</Text>
