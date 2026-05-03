@@ -21,10 +21,12 @@ export function extractInviteToken(input: string) {
     const queryToken = normalizeToken(url.searchParams.get("token"));
     if (queryToken) return queryToken;
 
-    const pathToken = normalizeToken(
-      url.pathname.split("/").filter(Boolean).at(-1),
-    );
-    if (pathToken) return pathToken;
+    if (url.protocol === "work-time:" && url.hostname === "invite") {
+      const pathToken = normalizeToken(
+        url.pathname.split("/").filter(Boolean).at(-1),
+      );
+      if (pathToken) return pathToken;
+    }
   } catch {
     return normalizeToken(trimmed);
   }

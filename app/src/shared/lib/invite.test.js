@@ -30,6 +30,10 @@ describe("invite utilities", () => {
     expect(extractInviteToken(`work-time://invite/${TOKEN}`)).toBe(TOKEN);
   });
 
+  it("rejects a token from an arbitrary URL path", () => {
+    expect(extractInviteToken(`https://example.com/${TOKEN}`)).toBeNull();
+  });
+
   it("rejects invalid invite input", () => {
     expect(extractInviteToken("not-a-valid-token")).toBeNull();
     expect(extractInviteToken("")).toBeNull();
