@@ -13,6 +13,18 @@ import {
 } from "@shared/lib/pending-invite";
 import { useJoinWorkspaceByInvite } from "@shared/hooks/use-join-workspace-by-invite";
 
+const TERMINAL_INVITE_FAILURE_MESSAGES = [
+  "초대 링크가 올바르지 않습니다.",
+  "만료된 초대입니다.",
+  "이미 참여 중인 워크스페이스입니다.",
+];
+
+function isTerminalInviteFailure(error: unknown) {
+  if (!(error instanceof Error)) return false;
+
+  return TERMINAL_INVITE_FAILURE_MESSAGES.includes(error.message);
+}
+
 function RootNavigator() {
   const router = useRouter();
   const segments = useSegments();
@@ -24,13 +36,26 @@ function RootNavigator() {
 
     let cancelled = false;
 
-    getPendingInviteToken().then(async (pendingToken) => {
+    async function resumePendingInvite() {
+      let pendingToken: string | null;
+      try {
+        pendingToken = await getPendingInviteToken();
+      } catch {
+        if (!cancelled) {
+          Alert.alert("초대 참여 실패", "초대 정보를 불러올 수 없습니다.");
+        }
+        return;
+      }
+
       if (!pendingToken || cancelled) return;
 
       try {
         await joinByInvite(pendingToken);
       } catch (error) {
-        await clearPendingInviteToken();
+        if (isTerminalInviteFailure(error)) {
+          await clearPendingInviteToken().catch(() => {});
+        }
+
         if (!cancelled) {
           Alert.alert(
             "초대 참여 실패",
@@ -40,7 +65,9 @@ function RootNavigator() {
           );
         }
       }
-    });
+    }
+
+    resumePendingInvite();
 
     return () => {
       cancelled = true;

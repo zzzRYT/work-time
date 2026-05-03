@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Alert } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { ScreenLoader } from "@shared/ui/screen-loader";
@@ -13,6 +13,9 @@ export default function JoinInviteScreen() {
   const isLoaded = useAuthStore((s) => s.isLoaded);
   const { joinByInvite } = useJoinWorkspaceByInvite();
   const tokenValue = Array.isArray(token) ? token[0] : token;
+  const processingRef = useRef<{ token: string; cancelled: boolean } | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -24,20 +27,57 @@ export default function JoinInviteScreen() {
       return;
     }
 
-    if (!session) {
-      storePendingInviteToken(inviteToken).finally(() => {
-        router.replace("/login");
-      });
+    if (
+      processingRef.current?.token === inviteToken &&
+      !processingRef.current.cancelled
+    ) {
       return;
     }
 
+    const operation = { token: inviteToken, cancelled: false };
+    processingRef.current = operation;
+    const isCurrentOperation = () =>
+      processingRef.current === operation && !operation.cancelled;
+
+    if (!session) {
+      storePendingInviteToken(inviteToken)
+        .then(() => {
+          if (isCurrentOperation()) {
+            router.replace("/login");
+          }
+        })
+        .catch(() => {
+          if (isCurrentOperation()) {
+            Alert.alert("초대 참여 실패", "초대 정보를 저장할 수 없습니다.");
+            processingRef.current = null;
+          }
+        });
+
+      return () => {
+        operation.cancelled = true;
+        if (processingRef.current === operation) {
+          processingRef.current = null;
+        }
+      };
+    }
+
     joinByInvite(inviteToken).catch((error) => {
+      if (!isCurrentOperation()) return;
+
       Alert.alert(
         "초대 참여 실패",
         error instanceof Error ? error.message : "워크스페이스 참여에 실패했습니다.",
       );
+      processingRef.current = null;
       router.replace("/workspaces");
     });
+
+    return () => {
+      operation.cancelled = true;
+      if (processingRef.current === operation) {
+        processingRef.current = null;
+      }
+    };
   }, [isLoaded, joinByInvite, session, tokenValue]);
 
   return <ScreenLoader />;
