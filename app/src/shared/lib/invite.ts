@@ -1,7 +1,7 @@
 export const INVITE_EXPIRES_IN_HOURS = 168;
 export const PENDING_INVITE_TOKEN_KEY = "@work-time/pending-invite-token";
 
-const INVITE_TOKEN_PATTERN = /^[a-fA-F0-9]{64}$/;
+const INVITE_TOKEN_PATTERN = /^[a-f0-9]{64}$/;
 
 function normalizeToken(value: string | null | undefined) {
   const token = value?.trim() ?? "";

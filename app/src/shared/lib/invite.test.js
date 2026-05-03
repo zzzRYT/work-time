@@ -9,6 +9,7 @@ import {
 
 const TOKEN =
   "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+const UPPERCASE_TOKEN = TOKEN.toUpperCase();
 
 describe("invite utilities", () => {
   it("uses a seven day invite window", () => {
@@ -35,6 +36,22 @@ describe("invite utilities", () => {
     expect(extractInviteToken(`work-time://invite/${TOKEN}`)).toBe(TOKEN);
   });
 
+  it("rejects uppercase raw invite tokens", () => {
+    expect(extractInviteToken(UPPERCASE_TOKEN)).toBeNull();
+  });
+
+  it("rejects uppercase invite tokens from the join link query parameter", () => {
+    expect(
+      extractInviteToken(`work-time://join?token=${UPPERCASE_TOKEN}`),
+    ).toBeNull();
+  });
+
+  it("rejects uppercase invite tokens from the previous invite path format", () => {
+    expect(
+      extractInviteToken(`work-time://invite/${UPPERCASE_TOKEN}`),
+    ).toBeNull();
+  });
+
   it("rejects a token from an arbitrary URL path", () => {
     expect(extractInviteToken(`https://example.com/${TOKEN}`)).toBeNull();
   });
@@ -59,6 +76,12 @@ describe("invite utilities", () => {
     ).toBe("이미 참여 중인 워크스페이스입니다.");
     expect(getJoinWorkspaceErrorMessage(new Error("Invalid invite token"))).toBe(
       "초대 링크가 올바르지 않습니다.",
+    );
+    expect(
+      getJoinWorkspaceErrorMessage(new Error("초대 링크가 올바르지 않습니다.")),
+    ).toBe("초대 링크가 올바르지 않습니다.");
+    expect(getJoinWorkspaceErrorMessage(new Error("Unexpected error"))).toBe(
+      "워크스페이스 참여에 실패했습니다.",
     );
   });
 });
