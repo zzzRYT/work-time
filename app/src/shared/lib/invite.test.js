@@ -20,8 +20,13 @@ describe("invite utilities", () => {
     expect(PENDING_INVITE_TOKEN_KEY).toBe("@work-time/pending-invite-token");
   });
 
-  it("builds a join link with the app scheme", () => {
-    expect(buildInviteLink(TOKEN)).toBe(`work-time://join?token=${TOKEN}`);
+  it("builds an Expo Router join route link with the app scheme", () => {
+    const link = buildInviteLink(TOKEN);
+    const url = new URL(link);
+
+    expect(link).toBe(`work-time:///join?token=${TOKEN}`);
+    expect(url.hostname).toBe("");
+    expect(url.pathname).toBe("/join");
   });
 
   it("extracts a raw invite token", () => {
@@ -29,6 +34,10 @@ describe("invite utilities", () => {
   });
 
   it("extracts a token from the join link query parameter", () => {
+    expect(extractInviteToken(`work-time:///join?token=${TOKEN}`)).toBe(TOKEN);
+  });
+
+  it("extracts a token from the previous double slash join link query parameter", () => {
     expect(extractInviteToken(`work-time://join?token=${TOKEN}`)).toBe(TOKEN);
   });
 

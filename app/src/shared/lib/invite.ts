@@ -9,7 +9,7 @@ function normalizeToken(value: string | null | undefined) {
 }
 
 export function buildInviteLink(token: string, scheme = "work-time") {
-  return `${scheme}://join?token=${encodeURIComponent(token)}`;
+  return `${scheme}:///join?token=${encodeURIComponent(token)}`;
 }
 
 export function extractInviteToken(input: string) {
