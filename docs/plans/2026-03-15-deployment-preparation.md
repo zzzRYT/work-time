@@ -1,5 +1,9 @@
 # Deployment Preparation Implementation Plan
 
+> **[archived 2026-05-05]** Superseded by `docs/plans/2026-05-05-launch-plan.md`.
+> 이 plan은 Prisma+Express 시절 작성됨. 현재 stack은 NestJS+TypeORM+Apollo+Supabase로 변경됨.
+> 신규 작업 진행 금지 — 참고용으로만 보존.
+
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
 **Goal:** 서버(Railway)와 앱(Google Play Store) 배포를 위한 전체 인프라 준비
