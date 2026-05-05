@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { useQuery, useMutation } from "@apollo/client";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -47,6 +47,38 @@ export function SettingsPage() {
   );
   const isOwner = currentWorkspaceMembership?.role === "OWNER";
   const isAdmin = currentMember?.role === "ADMIN";
+
+  useEffect(() => {
+    if (loading) return;
+    console.log("[settings:perm-debug]", {
+      authStore: { workspaceId, memberId, hasSession: !!session },
+      query: {
+        loading,
+        errorMessage: error?.message ?? null,
+        myWorkspacesCount: data?.myWorkspaces?.length ?? null,
+        membersCount: data?.members?.length ?? null,
+        hasSettings: !!data?.settings,
+      },
+      lookup: {
+        currentWorkspaceMembershipFound: !!currentWorkspaceMembership,
+        currentWorkspaceRole: currentWorkspaceMembership?.role ?? null,
+        currentMemberFound: !!currentMember,
+        currentMemberRole: currentMember?.role ?? null,
+      },
+      flags: { isOwner, isAdmin },
+    });
+  }, [
+    loading,
+    error,
+    data,
+    workspaceId,
+    memberId,
+    session,
+    currentWorkspaceMembership,
+    currentMember,
+    isOwner,
+    isAdmin,
+  ]);
 
   const fallbackName = session?.user?.email?.split("@")[0] ?? "사용자";
 
