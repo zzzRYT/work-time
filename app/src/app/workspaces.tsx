@@ -126,13 +126,13 @@ export default function WorkspacesScreen() {
             <TextInput
               className="border border-border rounded-sm bg-white px-4 py-3 text-[15px] text-text-primary mb-3"
               placeholder="이름 (예: 모던애자일)"
-              placeholderTextColor="#A8A29E"
+              placeholderTextColor="#B8A898"
               value={newName}
               onChangeText={setNewName}
               autoFocus
             />
             <Pressable
-              className="bg-primary rounded-sm py-3 items-center"
+              className="bg-primary rounded-lg py-3 items-center"
               onPress={handleCreate}
               disabled={creating || !newName.trim()}
               style={{ opacity: creating || !newName.trim() ? 0.5 : 1 }}
@@ -144,7 +144,7 @@ export default function WorkspacesScreen() {
           </View>
         ) : (
           <Pressable
-            className="mt-6 border-2 border-dashed border-border rounded-lg py-4 items-center"
+            className="mt-6 border-2 border-dashed border-border rounded-lg py-5 items-center active:bg-surface"
             onPress={() => setShowCreate(true)}
           >
             <Text className="text-text-muted font-medium text-[15px]">

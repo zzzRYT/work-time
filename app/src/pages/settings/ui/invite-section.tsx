@@ -40,7 +40,10 @@ export function InviteSection({ className }: InviteSectionProps) {
 
   return (
     <View className={className}>
-      <View className="bg-surface rounded-lg p-4 border border-border">
+      <View
+        className="bg-surface rounded-lg p-4 border border-border"
+        style={{ shadowColor: "#2C1F14", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 }}
+      >
         <Text className="text-[15px] font-semibold text-text-primary mb-3">
           멤버 초대
         </Text>

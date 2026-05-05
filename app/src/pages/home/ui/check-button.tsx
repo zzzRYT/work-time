@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, Text } from "react-native";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import { cn } from "@shared/lib/cn";
 
 type CheckButtonProps = {
@@ -23,18 +23,20 @@ export function CheckButton({ state, onPress, loading, disabled, className }: Ch
       onPress={onPress}
       disabled={loading || disabled}
     >
-      {loading ? (
-        <ActivityIndicator color="#0D9488" />
-      ) : (
-        <Text
-          className={cn(
-            "text-[17px] font-bold",
-            state === "completed" ? "text-white" : "text-primary"
-          )}
-        >
-          {label}
-        </Text>
-      )}
+      <View className="h-[22px] items-center justify-center">
+        {loading ? (
+          <ActivityIndicator color="#F07A5A" size={20} />
+        ) : (
+          <Text
+            className={cn(
+              "text-[17px] font-bold leading-[22px]",
+              state === "completed" ? "text-white" : "text-primary"
+            )}
+          >
+            {label}
+          </Text>
+        )}
+      </View>
     </Pressable>
   );
 }

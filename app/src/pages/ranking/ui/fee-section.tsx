@@ -25,13 +25,13 @@ const statusLabel: Record<PaymentStatus, string> = {
 
 const statusBg: Record<PaymentStatus, string> = {
   UNPAID: "bg-late-bg",
-  PENDING: "bg-yellow-100",
+  PENDING: "bg-done-bg",
   PAID: "bg-studying-bg",
 };
 
 const statusText: Record<PaymentStatus, string> = {
   UNPAID: "text-late",
-  PENDING: "text-yellow-600",
+  PENDING: "text-done",
   PAID: "text-studying",
 };
 

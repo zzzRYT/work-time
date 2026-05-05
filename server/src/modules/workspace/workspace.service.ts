@@ -53,7 +53,7 @@ export class WorkspaceService {
         name: userName,
         displayName: userName,
         color: randomColor,
-        role: 'MEMBER',
+        role: 'ADMIN',
         workspaceId: workspace.id,
       });
       await manager.save(member);

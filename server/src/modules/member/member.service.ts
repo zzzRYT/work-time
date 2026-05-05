@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { MemberEntity } from '../../entities/member.entity';
 import { SessionEntity } from '../../entities/session.entity';
 import { DailyVacationEntity } from '../../entities/daily-vacation.entity';
+import { WorkspaceMemberEntity } from '../../entities/workspace-member.entity';
 import { deriveStatus } from '../session/utils/attendance.util';
 import { getKSTToday } from '../../common/utils/date.util';
 import { calculateDurationMinutes } from '../../common/utils/duration.util';
@@ -17,10 +18,18 @@ export class MemberService {
     private readonly sessionRepo: Repository<SessionEntity>,
     @InjectRepository(DailyVacationEntity)
     private readonly vacationRepo: Repository<DailyVacationEntity>,
+    @InjectRepository(WorkspaceMemberEntity)
+    private readonly workspaceMemberRepo: Repository<WorkspaceMemberEntity>,
   ) {}
 
   async findAll(workspaceId: string) {
-    return this.memberRepo.find({ where: { workspaceId }, order: { createdAt: 'ASC' } });
+    const members = await this.memberRepo.find({ where: { workspaceId }, order: { createdAt: 'ASC' } });
+    const ownerEntries = await this.workspaceMemberRepo.find({
+      where: { workspaceId, role: 'OWNER' },
+      select: ['memberId'],
+    });
+    const ownerMemberIds = new Set(ownerEntries.map((e) => e.memberId));
+    return members.map((m) => (ownerMemberIds.has(m.id) ? { ...m, role: 'ADMIN' } : m));
   }
 
   async getCurrentStatus(memberId: string) {

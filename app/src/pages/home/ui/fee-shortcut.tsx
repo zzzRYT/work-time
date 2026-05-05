@@ -1,5 +1,7 @@
-import { Alert, Pressable, Text, View } from "react-native";
+import { useState } from "react";
+import { Pressable, Text, View } from "react-native";
 import { cn } from "@shared/lib/cn";
+import { BottomSheet } from "@shared/ui/bottom-sheet";
 
 type PaymentStatus = "UNPAID" | "PENDING" | "PAID";
 
@@ -13,36 +15,57 @@ type FeeCardProps = {
 };
 
 function FeeCard({ title, description, amount, status, onRequest, className }: FeeCardProps) {
-  if (status === "PAID") return null;
+  const [sheetVisible, setSheetVisible] = useState(false);
 
-  const handlePress = () => {
-    Alert.alert(
-      `${title} 납부 신청`,
-      `${amount.toLocaleString()}원을 납부 신청하시겠습니까?`,
-      [
-        { text: "취소", style: "cancel" },
-        { text: "납부 신청", onPress: onRequest },
-      ]
-    );
-  };
+  if (status === "PAID") return null;
 
   return (
     <View className={cn("bg-surface rounded-lg p-4 border border-border", className)}>
-      <Text className="text-sm font-semibold text-gray-900 mb-1">{title}</Text>
-      <Text className="text-xs text-gray-500 mb-3">{description}</Text>
+      <Text className="text-sm font-semibold text-text-primary mb-1">{title}</Text>
+      <Text className="text-xs text-text-muted mb-3">{description}</Text>
 
       {status === "UNPAID" ? (
         <Pressable
           className="rounded-lg py-2.5 items-center border border-primary"
-          onPress={handlePress}
+          onPress={() => setSheetVisible(true)}
         >
           <Text className="text-sm font-semibold text-primary">납부 신청</Text>
         </Pressable>
       ) : (
-        <View className="rounded-lg py-2.5 items-center bg-yellow-100">
-          <Text className="text-sm font-semibold text-yellow-600">확인 대기 중</Text>
+        <View className="rounded-lg py-2.5 items-center bg-done-bg">
+          <Text className="text-sm font-semibold text-done">확인 대기 중</Text>
         </View>
       )}
+
+      <BottomSheet
+        visible={sheetVisible}
+        onClose={() => setSheetVisible(false)}
+        title={`${title} 납부 신청`}
+      >
+        <View className="bg-bg rounded-2xl p-4 mb-5">
+          <Text className="text-[13px] text-text-muted mb-1">납부 금액</Text>
+          <Text className="text-[22px] font-bold text-text-primary">
+            {amount.toLocaleString()}원
+          </Text>
+        </View>
+
+        <Pressable
+          className="bg-primary rounded-2xl py-4 items-center mb-3"
+          onPress={() => {
+            setSheetVisible(false);
+            onRequest();
+          }}
+        >
+          <Text className="text-white text-[15px] font-semibold">납부 신청</Text>
+        </Pressable>
+
+        <Pressable
+          className="py-3 items-center"
+          onPress={() => setSheetVisible(false)}
+        >
+          <Text className="text-[15px] text-text-muted">취소</Text>
+        </Pressable>
+      </BottomSheet>
     </View>
   );
 }

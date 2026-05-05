@@ -1,43 +1,10 @@
 import { useState } from "react";
 import { ActivityIndicator, Text, View } from "react-native";
 import { useQuery } from "@apollo/client";
-import { graphql } from "@graphql";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthStore } from "@shared/store/auth";
 import { HistoryContent } from "./ui/history-content";
-
-const CALENDAR_QUERY = graphql(`
-  query Calendar($memberId: ID!, $year: Int!, $month: Int!) {
-    calendar(memberId: $memberId, year: $year, month: $month) {
-      date
-      status
-    }
-    monthlySummary(memberId: $memberId, year: $year, month: $month) {
-      attendanceDays
-      totalStudyMinutes
-      averageDailyMinutes
-      lateCount
-      vacationDays
-      totalLateFee
-    }
-  }
-`);
-
-const DAY_DETAIL_QUERY = graphql(`
-  query DayDetail($memberId: ID!, $date: String!) {
-    dayDetail(memberId: $memberId, date: $date) {
-      sessions {
-        id
-        checkInTime
-        checkOutTime
-        isLate
-        durationMinutes
-      }
-      totalDurationMinutes
-      vacationHours
-    }
-  }
-`);
+import { CALENDAR_QUERY, DAY_DETAIL_QUERY } from "./api";
 
 function getKSTNow() {
   const now = new Date();
@@ -92,7 +59,7 @@ export function HistoryPage() {
   if (calendarLoading && !calendarData) {
     return (
       <SafeAreaView className="flex-1 bg-bg items-center justify-center">
-        <ActivityIndicator size="large" color="#0D9488" />
+        <ActivityIndicator size="large" color="#F07A5A" />
       </SafeAreaView>
     );
   }

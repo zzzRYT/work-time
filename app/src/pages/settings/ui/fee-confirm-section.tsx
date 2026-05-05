@@ -26,7 +26,10 @@ export function FeeConfirmSection({
   className,
 }: FeeConfirmSectionProps) {
   return (
-    <View className={cn("bg-surface rounded-lg p-4 border border-border", className)}>
+    <View
+      className={cn("bg-surface rounded-lg p-4 border border-border", className)}
+      style={{ shadowColor: "#2C1F14", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 }}
+    >
       <Text className="text-base font-semibold text-text-primary mb-3">
         납부 확인
       </Text>

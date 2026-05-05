@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { ScrollView, Text, View } from "react-native";
+import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { useQuery, useMutation } from "@apollo/client";
-import { graphql } from "@graphql";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Toast } from "@shared/ui/toast";
 import { getCurrentMonth } from "@shared/lib/date";
@@ -12,83 +11,14 @@ import { RoleSection } from "./ui/role-section";
 import { StudyTimeSection } from "./ui/study-time-section";
 import { LateFeeSection } from "./ui/late-fee-section";
 import { FeeConfirmSection, type PendingItem } from "./ui/fee-confirm-section";
-
-const SETTINGS_QUERY = graphql(`
-  query SettingsPage($month: String!) {
-    members {
-      id
-      displayName
-      color
-      role
-    }
-    settings {
-      id
-      studyStartHour
-      studyStartMinute
-      lateFeeAmount
-    }
-    feeStatus(month: $month) {
-      member {
-        id
-        displayName
-        color
-      }
-      lateFee
-      monthlyFee
-      monthlyFeeStatus
-      lateFeeStatus
-      lateCount
-    }
-  }
-`);
-
-const UPDATE_MEMBER_ROLE = graphql(`
-  mutation SettingsUpdateMemberRole($memberId: ID!, $role: MemberRole!) {
-    updateMemberRole(memberId: $memberId, role: $role) {
-      id
-      role
-    }
-  }
-`);
-
-const UPDATE_STUDY_START_TIME = graphql(`
-  mutation SettingsUpdateStudyStartTime($hour: Int!, $minute: Int!) {
-    updateStudyStartTime(hour: $hour, minute: $minute) {
-      id
-      studyStartHour
-      studyStartMinute
-    }
-  }
-`);
-
-const UPDATE_LATE_FEE_AMOUNT = graphql(`
-  mutation SettingsUpdateLateFeeAmount($amount: Int!) {
-    updateLateFeeAmount(amount: $amount) {
-      id
-      lateFeeAmount
-    }
-  }
-`);
-
-const CONFIRM_FEE_PAYMENT = graphql(`
-  mutation SettingsConfirmFeePayment($memberId: ID!, $month: String!, $type: FeeType!) {
-    confirmFeePayment(memberId: $memberId, month: $month, type: $type) {
-      id
-      monthlyFeeStatus
-      lateFeeStatus
-    }
-  }
-`);
-
-const REJECT_FEE_PAYMENT = graphql(`
-  mutation SettingsRejectFeePayment($memberId: ID!, $month: String!, $type: FeeType!) {
-    rejectFeePayment(memberId: $memberId, month: $month, type: $type) {
-      id
-      monthlyFeeStatus
-      lateFeeStatus
-    }
-  }
-`);
+import {
+  SETTINGS_QUERY,
+  UPDATE_MEMBER_ROLE,
+  UPDATE_STUDY_START_TIME,
+  UPDATE_LATE_FEE_AMOUNT,
+  CONFIRM_FEE_PAYMENT,
+  REJECT_FEE_PAYMENT,
+} from "./api";
 
 export function SettingsPage() {
   const currentMonth = getCurrentMonth();
@@ -96,6 +26,7 @@ export function SettingsPage() {
   const session = useAuthStore((s) => s.session);
   const { data, loading, error } = useQuery(SETTINGS_QUERY, {
     variables: { month: currentMonth },
+    fetchPolicy: "cache-and-network",
   });
   const [updateMemberRole] = useMutation(UPDATE_MEMBER_ROLE);
   const [updateStudyStartTime] = useMutation(UPDATE_STUDY_START_TIME);
@@ -226,13 +157,13 @@ export function SettingsPage() {
 
         <ProfileSection
           memberName={currentMember?.displayName ?? fallbackName}
-          memberColor={currentMember?.color ?? "#A8A29E"}
+          memberColor={currentMember?.color ?? "#B8A898"}
           className="mb-4"
         />
 
         {loading && !data && (
           <View className="bg-surface rounded-lg p-6 border border-border items-center mb-4">
-            <Text className="text-text-subtle text-sm">로딩중...</Text>
+            <ActivityIndicator size="large" color="#F07A5A" />
           </View>
         )}
 
