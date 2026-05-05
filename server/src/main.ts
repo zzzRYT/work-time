@@ -1,4 +1,7 @@
-import 'dotenv/config';
+import * as dotenv from 'dotenv';
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config({ path: '.env.local' });
+}
 import 'reflect-metadata';
 import { initSentry } from './sentry';
 initSentry();

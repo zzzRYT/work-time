@@ -6,11 +6,13 @@ import { DailyVacationEntity } from '../../entities/daily-vacation.entity';
 import { SessionService } from './session.service';
 import { SessionResolver } from './session.resolver';
 import { SettingsModule } from '../settings/settings.module';
+import { MemberModule } from '../member/member.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([MemberEntity, SessionEntity, DailyVacationEntity]),
     SettingsModule,
+    MemberModule,
   ],
   providers: [SessionService, SessionResolver],
 })

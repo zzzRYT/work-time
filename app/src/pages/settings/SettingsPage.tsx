@@ -23,6 +23,7 @@ import {
 export function SettingsPage() {
   const currentMonth = getCurrentMonth();
   const memberId = useAuthStore((s) => s.memberId);
+  const workspaceId = useAuthStore((s) => s.workspaceId);
   const session = useAuthStore((s) => s.session);
   const { data, loading, error } = useQuery(SETTINGS_QUERY, {
     variables: { month: currentMonth },
@@ -41,6 +42,10 @@ export function SettingsPage() {
   const members = data?.members ?? [];
   const settings = data?.settings;
   const currentMember = members.find((m) => m.id === memberId);
+  const currentWorkspaceMembership = data?.myWorkspaces.find(
+    (membership) => membership.workspaceId === workspaceId,
+  );
+  const isOwner = currentWorkspaceMembership?.role === "OWNER";
   const isAdmin = currentMember?.role === "ADMIN";
 
   const fallbackName = session?.user?.email?.split("@")[0] ?? "사용자";
@@ -175,7 +180,15 @@ export function SettingsPage() {
           </View>
         )}
 
-        {isAdmin && <InviteSection className="mb-4" />}
+        {isOwner && (
+          <InviteSection
+            className="mb-4"
+            onShared={() =>
+              setToast({ message: "초대 링크를 공유했습니다", variant: "success" })
+            }
+            onError={(message) => setToast({ message, variant: "error" })}
+          />
+        )}
 
         {isAdmin && pendingItems.length > 0 && (
           <FeeConfirmSection

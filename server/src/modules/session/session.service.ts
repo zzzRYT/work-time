@@ -5,6 +5,7 @@ import { SessionEntity } from '../../entities/session.entity';
 import { MemberEntity } from '../../entities/member.entity';
 import { DailyVacationEntity } from '../../entities/daily-vacation.entity';
 import { SettingsService } from '../settings/settings.service';
+import { MemberService } from '../member/member.service';
 import { getKSTToday, getMonthDateRange } from '../../common/utils/date.util';
 import { calculateDurationMinutes } from '../../common/utils/duration.util';
 import { isLateCheckIn } from './utils/attendance.util';
@@ -27,12 +28,15 @@ export class SessionService {
     @InjectRepository(DailyVacationEntity)
     private readonly vacationRepo: Repository<DailyVacationEntity>,
     private readonly settingsService: SettingsService,
+    private readonly memberService: MemberService,
   ) {}
 
-  async getActiveSession(memberId: string) {
+  async getActiveSession(memberId: string, workspaceId: string) {
+    await this.memberService.ensureMemberInWorkspace(memberId, workspaceId);
+
     const today = getKSTToday();
     return this.sessionRepo.findOne({
-      where: { memberId, date: today, checkOutTime: IsNull() },
+      where: { memberId, workspaceId, date: today, checkOutTime: IsNull() },
     });
   }
 
@@ -69,14 +73,16 @@ export class SessionService {
     return { total, attended, studying, late };
   }
 
-  async getDayDetail(memberId: string, date: string) {
+  async getDayDetail(memberId: string, date: string, workspaceId: string) {
+    await this.memberService.ensureMemberInWorkspace(memberId, workspaceId);
+
     const sessions = await this.sessionRepo.find({
-      where: { memberId, date },
+      where: { memberId, workspaceId, date },
       order: { checkInTime: 'ASC' },
     });
 
     const vacation = await this.vacationRepo.findOne({
-      where: { memberId, date },
+      where: { memberId, workspaceId, date },
     });
 
     const totalDurationMinutes = sessions.reduce(
@@ -92,32 +98,46 @@ export class SessionService {
     };
   }
 
-  async getCalendar(memberId: string, year: number, month: number) {
+  async getCalendar(
+    memberId: string,
+    year: number,
+    month: number,
+    workspaceId: string,
+  ) {
+    await this.memberService.ensureMemberInWorkspace(memberId, workspaceId);
+
     const { start, end } = getMonthDateRange(year, month);
 
     const [sessions, vacations] = await Promise.all([
       this.sessionRepo.find({
-        where: { memberId, date: Between(start, end) },
+        where: { memberId, workspaceId, date: Between(start, end) },
         order: { checkInTime: 'ASC' },
       }),
       this.vacationRepo.find({
-        where: { memberId, date: Between(start, end) },
+        where: { memberId, workspaceId, date: Between(start, end) },
       }),
     ]);
 
     return buildCalendar(year, month, sessions, vacations);
   }
 
-  async getMonthlySummary(memberId: string, year: number, month: number, workspaceId: string) {
+  async getMonthlySummary(
+    memberId: string,
+    year: number,
+    month: number,
+    workspaceId: string,
+  ) {
+    await this.memberService.ensureMemberInWorkspace(memberId, workspaceId);
+
     const { start, end } = getMonthDateRange(year, month);
 
     const [sessions, vacations] = await Promise.all([
       this.sessionRepo.find({
-        where: { memberId, date: Between(start, end) },
+        where: { memberId, workspaceId, date: Between(start, end) },
         order: { checkInTime: 'ASC' },
       }),
       this.vacationRepo.find({
-        where: { memberId, date: Between(start, end) },
+        where: { memberId, workspaceId, date: Between(start, end) },
       }),
     ]);
 
@@ -155,24 +175,26 @@ export class SessionService {
   }
 
   async checkIn(memberId: string, workspaceId: string) {
+    await this.memberService.ensureMemberInWorkspace(memberId, workspaceId);
+
     const today = getKSTToday();
 
     const vacation = await this.vacationRepo.findOne({
-      where: { memberId, date: today },
+      where: { memberId, workspaceId, date: today },
     });
     if (vacation && vacation.hours >= FULL_DAY_VACATION_HOURS) {
       throw new FullDayVacationError();
     }
 
     const activeSession = await this.sessionRepo.findOne({
-      where: { memberId, date: today, checkOutTime: IsNull() },
+      where: { memberId, workspaceId, date: today, checkOutTime: IsNull() },
     });
     if (activeSession) {
       throw new AlreadyCheckedInError();
     }
 
     const existingSessions = await this.sessionRepo.find({
-      where: { memberId, date: today },
+      where: { memberId, workspaceId, date: today },
     });
 
     const now = new Date();
@@ -194,11 +216,13 @@ export class SessionService {
     return this.sessionRepo.save(session);
   }
 
-  async checkOut(memberId: string) {
+  async checkOut(memberId: string, workspaceId: string) {
+    await this.memberService.ensureMemberInWorkspace(memberId, workspaceId);
+
     const today = getKSTToday();
 
     const activeSession = await this.sessionRepo.findOne({
-      where: { memberId, date: today, checkOutTime: IsNull() },
+      where: { memberId, workspaceId, date: today, checkOutTime: IsNull() },
     });
 
     if (!activeSession) {

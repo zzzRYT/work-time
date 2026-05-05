@@ -5,6 +5,7 @@ import { MemberEntity } from '../../entities/member.entity';
 import { SessionEntity } from '../../entities/session.entity';
 import { MonthlyFeeEntity } from '../../entities/monthly-fee.entity';
 import { SettingsService } from '../settings/settings.service';
+import { MemberService } from '../member/member.service';
 import {
   getMonthDateRange,
   getWeekDateRange,
@@ -33,6 +34,7 @@ export class FeeService {
     @InjectRepository(MonthlyFeeEntity)
     private readonly feeRepo: Repository<MonthlyFeeEntity>,
     private readonly settingsService: SettingsService,
+    private readonly memberService: MemberService,
   ) {}
 
   private validateMonthFormat(month: string) {
@@ -41,14 +43,19 @@ export class FeeService {
     }
   }
 
-  private async getOrCreateMonthlyFee(memberId: string, month: string) {
+  private async getOrCreateMonthlyFee(
+    memberId: string,
+    workspaceId: string,
+    month: string,
+  ) {
     const existing = await this.feeRepo.findOne({
-      where: { memberId, month },
+      where: { memberId, workspaceId, month },
     });
     if (existing) return existing;
 
     const fee = this.feeRepo.create({
       memberId,
+      workspaceId,
       month,
       monthlyFeeStatus: 'UNPAID',
       lateFeeStatus: 'UNPAID',
@@ -117,9 +124,15 @@ export class FeeService {
     return buildRanking(members, sessions);
   }
 
-  async requestFeePayment(memberId: string, month: string, type: FeeType) {
+  async requestFeePayment(
+    memberId: string,
+    workspaceId: string,
+    month: string,
+    type: FeeType,
+  ) {
     this.validateMonthFormat(month);
-    const fee = await this.getOrCreateMonthlyFee(memberId, month);
+    await this.memberService.ensureMemberInWorkspace(memberId, workspaceId);
+    const fee = await this.getOrCreateMonthlyFee(memberId, workspaceId, month);
     const field = getStatusField(type);
 
     if (fee[field] !== 'UNPAID') {
@@ -130,9 +143,15 @@ export class FeeService {
     return this.feeRepo.save(fee);
   }
 
-  async confirmFeePayment(memberId: string, month: string, type: FeeType) {
+  async confirmFeePayment(
+    memberId: string,
+    workspaceId: string,
+    month: string,
+    type: FeeType,
+  ) {
     this.validateMonthFormat(month);
-    const fee = await this.getOrCreateMonthlyFee(memberId, month);
+    await this.memberService.ensureMemberInWorkspace(memberId, workspaceId);
+    const fee = await this.getOrCreateMonthlyFee(memberId, workspaceId, month);
     const field = getStatusField(type);
 
     if (fee[field] !== 'PENDING') {
@@ -143,9 +162,15 @@ export class FeeService {
     return this.feeRepo.save(fee);
   }
 
-  async rejectFeePayment(memberId: string, month: string, type: FeeType) {
+  async rejectFeePayment(
+    memberId: string,
+    workspaceId: string,
+    month: string,
+    type: FeeType,
+  ) {
     this.validateMonthFormat(month);
-    const fee = await this.getOrCreateMonthlyFee(memberId, month);
+    await this.memberService.ensureMemberInWorkspace(memberId, workspaceId);
+    const fee = await this.getOrCreateMonthlyFee(memberId, workspaceId, month);
     const field = getStatusField(type);
 
     if (fee[field] !== 'PENDING') {

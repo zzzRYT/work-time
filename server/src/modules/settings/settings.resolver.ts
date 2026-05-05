@@ -6,6 +6,7 @@ import { SettingsService } from './settings.service';
 import { MemberRole } from '../member/enums/member-role.enum';
 import { Member } from '../member/dto/member.object';
 import { WorkspaceGuard } from '../auth/workspace.guard';
+import { AdminGuard } from '../auth/admin.guard';
 import { CurrentWorkspace } from '../auth/decorators/current-workspace.decorator';
 
 @Resolver(() => Settings)
@@ -21,7 +22,7 @@ export class SettingsResolver {
   }
 
   @Mutation(() => Member, { description: '멤버 역할 변경 (ADMIN 또는 MEMBER)' })
-  @UseGuards(WorkspaceGuard)
+  @UseGuards(AdminGuard)
   async updateMemberRole(
     @Args('memberId', { type: () => ID }) memberId: string,
     @Args('role', { type: () => MemberRole }) role: MemberRole,
@@ -31,7 +32,7 @@ export class SettingsResolver {
   }
 
   @Mutation(() => Settings, { description: '출근 시간 변경' })
-  @UseGuards(WorkspaceGuard)
+  @UseGuards(AdminGuard)
   async updateStudyStartTime(
     @Args('hour', { type: () => Int }) hour: number,
     @Args('minute', { type: () => Int }) minute: number,
@@ -41,7 +42,7 @@ export class SettingsResolver {
   }
 
   @Mutation(() => Settings, { description: '지각비 변경' })
-  @UseGuards(WorkspaceGuard)
+  @UseGuards(AdminGuard)
   async updateLateFeeAmount(
     @Args('amount', { type: () => Int }) amount: number,
     @CurrentWorkspace() workspaceId: string,
@@ -50,7 +51,7 @@ export class SettingsResolver {
   }
 
   @Mutation(() => Settings, { description: '월회비 변경' })
-  @UseGuards(WorkspaceGuard)
+  @UseGuards(AdminGuard)
   async updateMonthlyFeeAmount(
     @Args('amount', { type: () => Int }) amount: number,
     @CurrentWorkspace() workspaceId: string,

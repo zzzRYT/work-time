@@ -2,6 +2,18 @@ import { graphql } from "@graphql";
 
 export const SETTINGS_QUERY = graphql(`
   query SettingsPage($month: String!) {
+    me {
+      id
+      email
+      name
+      avatarUrl
+      provider
+      createdAt
+    }
+    myWorkspaces {
+      workspaceId
+      role
+    }
     members {
       id
       displayName
