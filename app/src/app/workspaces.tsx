@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   Alert,
   FlatList,
@@ -12,9 +12,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useMutation } from "@apollo/client";
 import { graphql } from "@graphql";
-import { useAuthStore } from "@shared/store/auth";
-import { apolloClient } from "@shared/lib/apollo";
 import { router } from "expo-router";
+import { apolloClient } from "@shared/lib/apollo";
+import { useJoinWorkspaceByInvite } from "@shared/hooks/use-join-workspace-by-invite";
+import { useAuthStore } from "@shared/store/auth";
 
 const MY_WORKSPACES = graphql(`
   query MyWorkspaces {
@@ -42,50 +43,121 @@ const CREATE_WORKSPACE = graphql(`
 export default function WorkspacesScreen() {
   const { data, loading, refetch } = useQuery(MY_WORKSPACES);
   const [createWorkspace] = useMutation(CREATE_WORKSPACE);
+  const { joinByInvite, loading: joiningByInvite } = useJoinWorkspaceByInvite();
   const setWorkspaceId = useAuthStore((s) => s.setWorkspaceId);
   const setMemberId = useAuthStore((s) => s.setMemberId);
   const signOut = useAuthStore((s) => s.signOut);
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState("");
+  const [inviteInput, setInviteInput] = useState("");
   const [creating, setCreating] = useState(false);
+  const actionInFlightRef = useRef(false);
+  const [actionInFlight, setActionInFlight] = useState(false);
 
-  const handleSelect = async (workspaceId: string, memberId: string) => {
+  const beginAction = () => {
+    if (actionInFlightRef.current) return false;
+    actionInFlightRef.current = true;
+    setActionInFlight(true);
+    return true;
+  };
+
+  const endAction = () => {
+    actionInFlightRef.current = false;
+    setActionInFlight(false);
+  };
+
+  const navigateToWorkspace = async (workspaceId: string, memberId: string) => {
     setWorkspaceId(workspaceId);
     setMemberId(memberId);
     await apolloClient.resetStore();
     router.replace("/(tabs)");
   };
 
+  const handleSelect = async (workspaceId: string, memberId: string) => {
+    if (!beginAction()) return;
+    let navigated = false;
+    try {
+      await navigateToWorkspace(workspaceId, memberId);
+      navigated = true;
+    } finally {
+      if (!navigated) {
+        endAction();
+      }
+    }
+  };
+
   const handleCreate = async () => {
     if (!newName.trim()) return;
+    if (!beginAction()) return;
     setCreating(true);
+    let navigated = false;
     try {
       const { data: result } = await createWorkspace({
         variables: { name: newName.trim() },
       });
       if (result?.createWorkspace) {
-        // After creating, refetch workspaces to get the membership with memberId
         const { data: refreshed } = await refetch();
         const newMembership = refreshed?.myWorkspaces?.find(
-          (w) => w.workspaceId === result.createWorkspace.id
+          (w) => w.workspaceId === result.createWorkspace.id,
         );
         if (newMembership) {
-          await handleSelect(newMembership.workspaceId, newMembership.memberId);
+          await navigateToWorkspace(
+            newMembership.workspaceId,
+            newMembership.memberId,
+          );
+          navigated = true;
         }
       }
     } catch (e) {
-      Alert.alert("오류", e instanceof Error ? e.message : "워크스페이스 생성 실패");
+      Alert.alert(
+        "오류",
+        e instanceof Error ? e.message : "워크스페이스 생성 실패",
+      );
     } finally {
-      setCreating(false);
+      if (!navigated) {
+        setCreating(false);
+        endAction();
+      }
+    }
+  };
+
+  const handleJoinByInvite = async () => {
+    if (!inviteInput.trim()) return;
+    if (!beginAction()) return;
+    let navigated = false;
+    try {
+      await joinByInvite(inviteInput);
+      navigated = true;
+    } catch (e) {
+      Alert.alert(
+        "초대 참여 실패",
+        e instanceof Error ? e.message : "워크스페이스 참여에 실패했습니다",
+      );
+    } finally {
+      if (!navigated) {
+        endAction();
+      }
     }
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    await apolloClient.clearStore();
+    if (!beginAction()) return;
+    let signedOut = false;
+    try {
+      await signOut();
+      await apolloClient.clearStore();
+      signedOut = true;
+    } finally {
+      if (!signedOut) {
+        endAction();
+      }
+    }
   };
 
   const workspaces = data?.myWorkspaces ?? [];
+  const createDisabled = actionInFlight || creating || !newName.trim();
+  const inviteDisabled =
+    actionInFlight || joiningByInvite || !inviteInput.trim();
 
   return (
     <SafeAreaView className="flex-1 bg-bg">
@@ -109,6 +181,8 @@ export default function WorkspacesScreen() {
                 <Pressable
                   className="bg-surface rounded-lg p-4 border border-border active:bg-surface-hover"
                   onPress={() => handleSelect(item.workspaceId, item.memberId)}
+                  disabled={actionInFlight}
+                  style={{ opacity: actionInFlight ? 0.5 : 1 }}
                 >
                   <Text className="text-[17px] font-medium text-text-primary">
                     워크스페이스
@@ -149,8 +223,8 @@ export default function WorkspacesScreen() {
               <Pressable
                 className="bg-primary rounded-lg py-3 items-center"
                 onPress={handleCreate}
-                disabled={creating || !newName.trim()}
-                style={{ opacity: creating || !newName.trim() ? 0.5 : 1 }}
+                disabled={createDisabled}
+                style={{ opacity: createDisabled ? 0.5 : 1 }}
               >
                 <Text className="text-white font-bold text-[15px]">
                   {creating ? "생성 중..." : "만들기"}
@@ -160,7 +234,13 @@ export default function WorkspacesScreen() {
           ) : (
             <Pressable
               className="mt-6 border-2 border-dashed border-border rounded-lg py-5 items-center active:bg-surface"
-              onPress={() => setShowCreate(true)}
+              onPress={() => {
+                if (!actionInFlightRef.current) {
+                  setShowCreate(true);
+                }
+              }}
+              disabled={actionInFlight}
+              style={{ opacity: actionInFlight ? 0.5 : 1 }}
             >
               <Text className="text-text-muted font-medium text-[15px]">
                 + 새 워크스페이스 만들기
@@ -168,7 +248,37 @@ export default function WorkspacesScreen() {
             </Pressable>
           )}
 
-          <Pressable className="mb-4 py-3 items-center" onPress={handleSignOut}>
+          <View className="mt-3 bg-surface rounded-lg p-4 border border-border">
+            <Text className="text-[15px] font-medium text-text-primary mb-3">
+              초대 코드로 참여
+            </Text>
+            <TextInput
+              className="border border-border rounded-sm bg-white px-4 py-3 text-[15px] text-text-primary mb-3"
+              placeholder="초대 링크 또는 코드"
+              placeholderTextColor="#B8A898"
+              value={inviteInput}
+              onChangeText={setInviteInput}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <Pressable
+              className="bg-primary rounded-lg py-3 items-center"
+              onPress={handleJoinByInvite}
+              disabled={inviteDisabled}
+              style={{ opacity: inviteDisabled ? 0.5 : 1 }}
+            >
+              <Text className="text-white font-bold text-[15px]">
+                {joiningByInvite ? "참여 중..." : "참여하기"}
+              </Text>
+            </Pressable>
+          </View>
+
+          <Pressable
+            className="mb-4 py-3 items-center"
+            onPress={handleSignOut}
+            disabled={actionInFlight}
+            style={{ opacity: actionInFlight ? 0.5 : 1 }}
+          >
             <Text className="text-text-subtle text-[13px]">로그아웃</Text>
           </Pressable>
         </KeyboardAvoidingView>
