@@ -25,6 +25,7 @@ export const SETTINGS_QUERY = graphql(`
       studyStartHour
       studyStartMinute
       lateFeeAmount
+      monthlyFeeAmount
     }
     feeStatus(month: $month) {
       member {
@@ -65,6 +66,15 @@ export const UPDATE_LATE_FEE_AMOUNT = graphql(`
     updateLateFeeAmount(amount: $amount) {
       id
       lateFeeAmount
+    }
+  }
+`);
+
+export const UPDATE_MONTHLY_FEE_AMOUNT = graphql(`
+  mutation SettingsUpdateMonthlyFeeAmount($amount: Int!) {
+    updateMonthlyFeeAmount(amount: $amount) {
+      id
+      monthlyFeeAmount
     }
   }
 `);
