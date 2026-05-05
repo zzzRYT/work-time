@@ -10,12 +10,14 @@ import { InviteSection } from "./ui/invite-section";
 import { RoleSection } from "./ui/role-section";
 import { StudyTimeSection } from "./ui/study-time-section";
 import { LateFeeSection } from "./ui/late-fee-section";
+import { MonthlyFeeSection } from "./ui/monthly-fee-section";
 import { FeeConfirmSection, type PendingItem } from "./ui/fee-confirm-section";
 import {
   SETTINGS_QUERY,
   UPDATE_MEMBER_ROLE,
   UPDATE_STUDY_START_TIME,
   UPDATE_LATE_FEE_AMOUNT,
+  UPDATE_MONTHLY_FEE_AMOUNT,
   CONFIRM_FEE_PAYMENT,
   REJECT_FEE_PAYMENT,
 } from "./api";
@@ -32,6 +34,7 @@ export function SettingsPage() {
   const [updateMemberRole] = useMutation(UPDATE_MEMBER_ROLE);
   const [updateStudyStartTime] = useMutation(UPDATE_STUDY_START_TIME);
   const [updateLateFeeAmount] = useMutation(UPDATE_LATE_FEE_AMOUNT);
+  const [updateMonthlyFeeAmount] = useMutation(UPDATE_MONTHLY_FEE_AMOUNT);
   const [confirmFeePayment] = useMutation(CONFIRM_FEE_PAYMENT);
   const [rejectFeePayment] = useMutation(REJECT_FEE_PAYMENT);
   const [toast, setToast] = useState<{
@@ -151,6 +154,18 @@ export function SettingsPage() {
     }
   };
 
+  const handleMonthlyFeeChange = async (amount: number) => {
+    try {
+      await updateMonthlyFeeAmount({
+        variables: { amount },
+      });
+      setToast({ message: "월 회비가 변경되었습니다", variant: "success" });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "설정 변경에 실패했습니다";
+      setToast({ message: msg, variant: "error" });
+    }
+  };
+
   const handleConfirmPayment = async (targetMemberId: string, type: "MONTHLY" | "LATE") => {
     const entry = data?.feeStatus?.find((e) => e.member.id === targetMemberId);
     try {
@@ -251,6 +266,12 @@ export function SettingsPage() {
             <LateFeeSection
               currentAmount={settings.lateFeeAmount}
               onSave={handleLateFeeChange}
+              className="mb-4"
+            />
+
+            <MonthlyFeeSection
+              currentAmount={settings.monthlyFeeAmount}
+              onSave={handleMonthlyFeeChange}
               className="mb-8"
             />
           </>

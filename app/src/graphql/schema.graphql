@@ -1,232 +1,54 @@
 """출석 상태"""
 enum AttendanceStatus {
-  """미출석"""
-  NOT_ATTENDED
-
-  """학습 중"""
-  STUDYING
-
   """학습 완료"""
   COMPLETED
 
   """지각"""
   LATE
 
+  """미출석"""
+  NOT_ATTENDED
+
+  """학습 중"""
+  STUDYING
+
   """휴가"""
   VACATION
 }
 
-"""랭킹 기간"""
-enum RankingPeriod {
-  """주간"""
-  WEEKLY
-
-  """월간"""
-  MONTHLY
-}
-
-"""사용자"""
-type User {
-  id: ID!
-  """이메일"""
-  email: String!
-  """이름"""
-  name: String!
-  """프로필 이미지 URL"""
-  avatarUrl: String
-  """인증 제공자"""
-  provider: String!
-  """가입일"""
-  createdAt: String!
-}
-
-"""워크스페이스"""
-type Workspace {
-  id: ID!
-  """워크스페이스 이름"""
-  name: String!
-  """워크스페이스 슬러그"""
-  slug: String!
-  """소유자 ID"""
-  ownerId: String!
-  """생성일"""
-  createdAt: String!
-}
-
-"""워크스페이스 멤버십"""
-type WorkspaceMemberObject {
-  id: ID!
-  """워크스페이스 ID"""
-  workspaceId: String!
-  """사용자 ID"""
-  userId: String!
-  """멤버 ID"""
-  memberId: String!
-  """역할 (OWNER 또는 MEMBER)"""
-  role: String!
-  """가입일"""
-  joinedAt: String!
-}
-
-"""초대 링크"""
-type Invite {
-  id: ID!
-  """워크스페이스 ID"""
-  workspaceId: String!
-  """초대 토큰"""
-  token: String!
-  """생성자 ID"""
-  createdBy: String!
-  """만료일"""
-  expiresAt: String
-  """생성일"""
-  createdAt: String!
-}
-
-type Query {
-  _empty: String
-
-  """현재 로그인한 사용자"""
-  me: User!
-  """내가 속한 워크스페이스 목록"""
-  myWorkspaces: [WorkspaceMemberObject!]!
-  """현재 워크스페이스 정보"""
-  workspace: Workspace!
-  """워크스페이스 멤버 목록"""
-  workspaceMembers: [WorkspaceMemberObject!]!
-
-  """전체 멤버 목록 조회"""
-  members: [Member!]!
-
-  """해당 멤버의 오늘 활성 세션 (체크아웃 전). 없으면 null"""
-  activeSession(memberId: ID!): Session
-
-  """오늘의 출석 요약"""
-  todayAttendanceSummary: AttendanceSummary!
-
-  """특정 멤버의 특정 날짜 상세 조회"""
-  dayDetail(memberId: ID!, date: String!): DayDetailResult!
-
-  """특정 멤버의 월간 캘린더"""
-  calendar(memberId: ID!, year: Int!, month: Int!): [CalendarDay!]!
-
-  """특정 멤버의 월간 요약"""
-  monthlySummary(memberId: ID!, year: Int!, month: Int!): MonthlySummaryResult!
-
-  """월별 회비 상태 조회"""
-  feeStatus(month: String!): [FeeStatusEntry!]!
-
-  """멤버 랭킹 (주간/월간)"""
-  memberRanking(period: RankingPeriod!): [RankingEntry!]!
-
-  """현재 설정 조회"""
-  settings: Settings!
-}
-
-type Mutation {
-  _empty: String
-
-  """새 워크스페이스 생성"""
-  createWorkspace(name: String!): Workspace!
-  """초대 링크 생성 (OWNER만)"""
-  createInvite(expiresInHours: Int): Invite!
-  """초대 토큰으로 워크스페이스 참가"""
-  joinWorkspace(token: String!): WorkspaceMemberObject!
-
-  """체크인 (지각 자동 감지)"""
-  checkIn(memberId: ID!): Session!
-
-  """체크아웃"""
-  checkOut(memberId: ID!): Session!
-
-  """휴가 사용 등록"""
-  useVacation(memberId: ID!, date: String!, hours: Int!): DailyVacation!
-
-  """다중 날짜 휴가 일괄 등록"""
-  useVacations(memberId: ID!, dates: [String!]!, hours: Int!): UseVacationsResult!
-
-  """휴가 취소"""
-  cancelVacation(memberId: ID!, date: String!): Boolean!
-
-  """멤버가 납부 완료 신청 (UNPAID → PENDING)"""
-  requestFeePayment(memberId: ID!, month: String!, type: FeeType!): MonthlyFee!
-
-  """어드민이 납부 확인 (PENDING → PAID)"""
-  confirmFeePayment(memberId: ID!, month: String!, type: FeeType!): MonthlyFee!
-
-  """어드민이 납부 거절 (PENDING → UNPAID)"""
-  rejectFeePayment(memberId: ID!, month: String!, type: FeeType!): MonthlyFee!
-
-  """멤버 역할 변경 (ADMIN 또는 MEMBER)"""
-  updateMemberRole(memberId: ID!, role: MemberRole!): Member!
-
-  """출근 시간 변경"""
-  updateStudyStartTime(hour: Int!, minute: Int!): Settings!
-
-  """지각비 변경"""
-  updateLateFeeAmount(amount: Int!): Settings!
-}
-
-"""스터디 멤버"""
-type Member {
-  id: ID!
-
-  """실명"""
-  name: String!
-
-  """표시 이름"""
-  displayName: String!
-
-  """프로필 색상 (hex)"""
-  color: String!
-
-  """역할 (ADMIN 또는 MEMBER)"""
-  role: MemberRole!
-
-  """오늘의 출석 상태"""
-  currentStatus: AttendanceStatus!
-
-  """오늘 총 학습 시간(분)"""
-  todayStudyMinutes: Int!
-
-  """오늘 휴가 시간 (null이면 휴가 없음)"""
-  todayVacationHours: Int
-}
-
-"""출석 세션 (체크인~체크아웃)"""
-type Session {
-  id: ID!
-  memberId: ID!
-
-  """날짜 (YYYY-MM-DD)"""
-  date: String!
-
-  """체크인 시각 (ISO 8601)"""
-  checkInTime: String!
-
-  """체크아웃 시각 (ISO 8601, 학습 중이면 null)"""
-  checkOutTime: String
-
-  """지각 여부"""
-  isLate: Boolean!
-
-  """학습 시간(분), 체크아웃 전이면 현재까지 경과 시간"""
-  durationMinutes: Int
-}
-
 """출석 요약 통계"""
 type AttendanceSummary {
-  """전체 멤버 수"""
-  total: Int!
-
   """출석한 멤버 수"""
   attended: Int!
+
+  """지각한 멤버 수"""
+  late: Int!
 
   """현재 학습 중인 멤버 수"""
   studying: Int!
 
-  """지각한 멤버 수"""
-  late: Int!
+  """전체 멤버 수"""
+  total: Int!
+}
+
+"""캘린더 날짜별 출석 상태"""
+type CalendarDay {
+  """날짜 (YYYY-MM-DD)"""
+  date: String!
+
+  """해당 날짜의 출석 상태"""
+  status: AttendanceStatus!
+}
+
+"""일일 휴가 기록"""
+type DailyVacation {
+  """날짜 (YYYY-MM-DD)"""
+  date: String!
+
+  """휴가 시간 (2, 4, 6, 8시간 단위)"""
+  hours: Int!
+  id: ID!
+  memberId: ID!
 }
 
 """특정 날짜의 상세 출석 정보"""
@@ -240,131 +62,76 @@ type DayDetailResult {
   vacationHours: Int
 }
 
-"""캘린더 날짜별 출석 상태"""
-type CalendarDay {
-  """날짜 (YYYY-MM-DD)"""
-  date: String!
-
-  """해당 날짜의 출석 상태"""
-  status: AttendanceStatus!
-}
-
-"""월간 요약 통계"""
-type MonthlySummaryResult {
-  """출석 일수"""
-  attendanceDays: Int!
-
-  """총 학습 시간(분)"""
-  totalStudyMinutes: Int!
-
-  """일 평균 학습 시간(분)"""
-  averageDailyMinutes: Int!
-
+"""회비 상태 항목"""
+type FeeStatusEntry {
   """지각 횟수"""
   lateCount: Int!
 
-  """휴가 일수"""
-  vacationDays: Int!
-
-  """총 지각 벌금(원)"""
-  totalLateFee: Int!
-}
-
-"""일일 휴가 기록"""
-type DailyVacation {
-  id: ID!
-  memberId: ID!
-
-  """날짜 (YYYY-MM-DD)"""
-  date: String!
-
-  """휴가 시간 (2, 4, 6, 8시간 단위)"""
-  hours: Int!
-}
-
-"""다중 날짜 휴가 등록 결과"""
-type UseVacationsResult {
-  """등록 성공한 휴가 목록"""
-  succeeded: [DailyVacation!]!
-
-  """등록 실패한 날짜와 사유"""
-  failed: [VacationFailure!]!
-}
-
-"""휴가 등록 실패 정보"""
-type VacationFailure {
-  date: String!
-  reason: String!
-}
-
-"""납부 상태"""
-enum PaymentStatus {
-  """미납"""
-  UNPAID
-
-  """확인 대기"""
-  PENDING
-
-  """납부 완료"""
-  PAID
-}
-
-"""납부 항목 종류"""
-enum FeeType {
-  """월 회비"""
-  MONTHLY
-
-  """지각비"""
-  LATE
-}
-
-"""월별 회비 납부 기록"""
-type MonthlyFee {
-  id: ID!
-  memberId: ID!
-
-  """월 (YYYY-MM)"""
-  month: String!
-
-  """월 회비 납부 상태"""
-  monthlyFeeStatus: PaymentStatus!
+  """지각 벌금(원)"""
+  lateFee: Int!
 
   """지각비 납부 상태"""
   lateFeeStatus: PaymentStatus!
-}
-
-"""회비 상태 항목"""
-type FeeStatusEntry {
   member: Member!
-
-  """지각 벌금(원)"""
-  lateFee: Int!
 
   """월 회비(원)"""
   monthlyFee: Int!
 
   """월 회비 납부 상태"""
   monthlyFeeStatus: PaymentStatus!
-
-  """지각비 납부 상태"""
-  lateFeeStatus: PaymentStatus!
-
-  """지각 횟수"""
-  lateCount: Int!
 }
 
-"""랭킹 항목"""
-type RankingEntry {
-  member: Member!
+"""납부 항목 종류"""
+enum FeeType {
+  """지각비"""
+  LATE
 
-  """총 학습 시간(분)"""
-  totalStudyMinutes: Int!
+  """월 회비"""
+  MONTHLY
+}
 
-  """출석 일수"""
-  attendanceDays: Int!
+"""초대 링크"""
+type Invite {
+  """생성일"""
+  createdAt: String!
 
-  """지각 횟수"""
-  lateCount: Int!
+  """생성자 ID"""
+  createdBy: String!
+
+  """만료일"""
+  expiresAt: String
+  id: ID!
+
+  """초대 토큰"""
+  token: String!
+
+  """워크스페이스 ID"""
+  workspaceId: String!
+}
+
+"""스터디 멤버"""
+type Member {
+  """프로필 색상 (hex)"""
+  color: String!
+
+  """오늘의 출석 상태"""
+  currentStatus: AttendanceStatus!
+
+  """표시 이름"""
+  displayName: String!
+  id: ID!
+
+  """실명"""
+  name: String!
+
+  """역할 (ADMIN 또는 MEMBER)"""
+  role: MemberRole!
+
+  """오늘 총 학습 시간(분)"""
+  todayStudyMinutes: Int!
+
+  """오늘 휴가 시간 (null이면 휴가 없음)"""
+  todayVacationHours: Int
 }
 
 """멤버 역할"""
@@ -376,9 +143,191 @@ enum MemberRole {
   MEMBER
 }
 
+"""월별 회비 납부 기록"""
+type MonthlyFee {
+  id: ID!
+
+  """지각비 납부 상태"""
+  lateFeeStatus: PaymentStatus!
+  memberId: ID!
+
+  """월 (YYYY-MM)"""
+  month: String!
+
+  """월 회비 납부 상태"""
+  monthlyFeeStatus: PaymentStatus!
+}
+
+"""월간 요약 통계"""
+type MonthlySummaryResult {
+  """출석 일수"""
+  attendanceDays: Int!
+
+  """일 평균 학습 시간(분)"""
+  averageDailyMinutes: Int!
+
+  """지각 횟수"""
+  lateCount: Int!
+
+  """총 지각 벌금(원)"""
+  totalLateFee: Int!
+
+  """총 학습 시간(분)"""
+  totalStudyMinutes: Int!
+
+  """휴가 일수"""
+  vacationDays: Int!
+}
+
+type Mutation {
+  """휴가 취소"""
+  cancelVacation(date: String!, memberId: ID!): Boolean!
+
+  """체크인 (지각 자동 감지)"""
+  checkIn(memberId: ID!): Session!
+
+  """체크아웃"""
+  checkOut(memberId: ID!): Session!
+
+  """어드민이 납부 확인 (PENDING → PAID)"""
+  confirmFeePayment(memberId: ID!, month: String!, type: FeeType!): MonthlyFee!
+
+  """초대 링크 생성 (OWNER만 가능)"""
+  createInvite(expiresInHours: Int): Invite!
+
+  """새 워크스페이스 생성"""
+  createWorkspace(name: String!): Workspace!
+
+  """초대 토큰으로 워크스페이스 참가"""
+  joinWorkspace(token: String!): WorkspaceMemberObject!
+
+  """어드민이 납부 거절 (PENDING → UNPAID)"""
+  rejectFeePayment(memberId: ID!, month: String!, type: FeeType!): MonthlyFee!
+
+  """멤버가 납부 완료 신청 (UNPAID → PENDING)"""
+  requestFeePayment(memberId: ID!, month: String!, type: FeeType!): MonthlyFee!
+
+  """지각비 변경"""
+  updateLateFeeAmount(amount: Int!): Settings!
+
+  """멤버 역할 변경 (ADMIN 또는 MEMBER)"""
+  updateMemberRole(memberId: ID!, role: MemberRole!): Member!
+
+  """월회비 변경"""
+  updateMonthlyFeeAmount(amount: Int!): Settings!
+
+  """출근 시간 변경"""
+  updateStudyStartTime(hour: Int!, minute: Int!): Settings!
+
+  """휴가 사용 등록"""
+  useVacation(date: String!, hours: Int!, memberId: ID!): DailyVacation!
+
+  """다중 날짜 휴가 일괄 등록"""
+  useVacations(dates: [String!]!, hours: Int!, memberId: ID!): UseVacationsResult!
+}
+
+"""납부 상태"""
+enum PaymentStatus {
+  """납부 완료"""
+  PAID
+
+  """확인 대기"""
+  PENDING
+
+  """미납"""
+  UNPAID
+}
+
+type Query {
+  """해당 멤버의 오늘 활성 세션 (체크아웃 전). 없으면 null"""
+  activeSession(memberId: ID!): Session
+
+  """특정 멤버의 월간 캘린더"""
+  calendar(memberId: ID!, month: Int!, year: Int!): [CalendarDay!]!
+
+  """특정 멤버의 특정 날짜 상세 조회"""
+  dayDetail(date: String!, memberId: ID!): DayDetailResult!
+
+  """월별 회비 상태 조회"""
+  feeStatus(month: String!): [FeeStatusEntry!]!
+
+  """현재 로그인한 사용자 정보"""
+  me: User!
+
+  """멤버 랭킹 (주간/월간)"""
+  memberRanking(period: RankingPeriod!): [RankingEntry!]!
+
+  """전체 멤버 목록 조회"""
+  members: [Member!]!
+
+  """특정 멤버의 월간 요약"""
+  monthlySummary(memberId: ID!, month: Int!, year: Int!): MonthlySummaryResult!
+
+  """내가 속한 워크스페이스 목록"""
+  myWorkspaces: [WorkspaceMemberObject!]!
+
+  """현재 설정 조회"""
+  settings: Settings!
+
+  """오늘의 출석 요약"""
+  todayAttendanceSummary: AttendanceSummary!
+
+  """현재 워크스페이스 정보"""
+  workspace: Workspace!
+
+  """워크스페이스 멤버 목록"""
+  workspaceMembers: [WorkspaceMemberObject!]!
+}
+
+"""랭킹 항목"""
+type RankingEntry {
+  """출석 일수"""
+  attendanceDays: Int!
+
+  """지각 횟수"""
+  lateCount: Int!
+  member: Member!
+
+  """총 학습 시간(분)"""
+  totalStudyMinutes: Int!
+}
+
+"""랭킹 기간"""
+enum RankingPeriod {
+  """월간"""
+  MONTHLY
+
+  """주간"""
+  WEEKLY
+}
+
+"""출석 세션 (체크인~체크아웃)"""
+type Session {
+  """체크인 시각 (ISO 8601)"""
+  checkInTime: String!
+
+  """체크아웃 시각 (ISO 8601, 학습 중이면 null)"""
+  checkOutTime: String
+
+  """날짜 (YYYY-MM-DD)"""
+  date: String!
+
+  """학습 시간(분), 체크아웃 전이면 현재까지 경과 시간"""
+  durationMinutes: Int
+  id: ID!
+
+  """지각 여부"""
+  isLate: Boolean!
+  memberId: ID!
+}
+
 """스터디 그룹 전역 설정"""
 type Settings {
-  id: ID!
+  """지각비 (원, 0 이상)"""
+  lateFeeAmount: Int!
+
+  """월회비 (원, 0 이상)"""
+  monthlyFeeAmount: Int!
 
   """출근 시간 (시, 0~23)"""
   studyStartHour: Int!
@@ -386,9 +335,77 @@ type Settings {
   """출근 시간 (분, 0~59)"""
   studyStartMinute: Int!
 
-  """지각비 (원, 0 이상)"""
-  lateFeeAmount: Int!
-
   """마지막 수정 시각"""
   updatedAt: String!
+  workspaceId: ID!
+}
+
+"""다중 날짜 휴가 등록 결과"""
+type UseVacationsResult {
+  """등록 실패한 날짜와 사유"""
+  failed: [VacationFailure!]!
+
+  """등록 성공한 휴가 목록"""
+  succeeded: [DailyVacation!]!
+}
+
+"""사용자"""
+type User {
+  """프로필 이미지 URL"""
+  avatarUrl: String
+
+  """가입일"""
+  createdAt: String!
+
+  """이메일"""
+  email: String!
+  id: ID!
+
+  """이름"""
+  name: String!
+
+  """인증 제공자"""
+  provider: String!
+}
+
+"""휴가 등록 실패 정보"""
+type VacationFailure {
+  date: String!
+  reason: String!
+}
+
+"""워크스페이스"""
+type Workspace {
+  """생성일"""
+  createdAt: String!
+  id: ID!
+
+  """워크스페이스 이름"""
+  name: String!
+
+  """소유자 ID"""
+  ownerId: String!
+
+  """워크스페이스 슬러그"""
+  slug: String!
+}
+
+"""워크스페이스 멤버십"""
+type WorkspaceMemberObject {
+  id: ID!
+
+  """가입일"""
+  joinedAt: String!
+
+  """멤버 ID"""
+  memberId: String!
+
+  """역할 (OWNER 또는 MEMBER)"""
+  role: String!
+
+  """사용자 ID"""
+  userId: String!
+
+  """워크스페이스 ID"""
+  workspaceId: String!
 }
