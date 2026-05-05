@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { FlatList, Pressable, Text, TextInput, View, Alert } from "react-native";
+import {
+  Alert,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useMutation } from "@apollo/client";
 import { graphql } from "@graphql";
@@ -88,74 +97,81 @@ export default function WorkspacesScreen() {
           참여할 스터디 그룹을 선택하세요
         </Text>
 
-        {loading ? (
-          <Text className="text-text-subtle text-center py-8">로딩중...</Text>
-        ) : (
-          <FlatList
-            data={workspaces}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={{ gap: 12 }}
-            renderItem={({ item }) => (
+        <View className="flex-1">
+          {loading ? (
+            <Text className="text-text-subtle text-center py-8">로딩중...</Text>
+          ) : (
+            <FlatList
+              data={workspaces}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={{ gap: 12 }}
+              renderItem={({ item }) => (
+                <Pressable
+                  className="bg-surface rounded-lg p-4 border border-border active:bg-surface-hover"
+                  onPress={() => handleSelect(item.workspaceId, item.memberId)}
+                >
+                  <Text className="text-[17px] font-medium text-text-primary">
+                    워크스페이스
+                  </Text>
+                  <Text className="text-[13px] text-text-muted mt-1">
+                    {item.role === "OWNER" ? "관리자" : "멤버"}
+                  </Text>
+                </Pressable>
+              )}
+              ListEmptyComponent={
+                <View className="items-center py-8">
+                  <Text className="text-text-subtle text-[15px]">
+                    참여 중인 워크스페이스가 없습니다
+                  </Text>
+                </View>
+              }
+            />
+          )}
+        </View>
+
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          keyboardVerticalOffset={24}
+        >
+          {showCreate ? (
+            <View className="mt-6 bg-surface rounded-lg p-4 border border-border">
+              <Text className="text-[15px] font-medium text-text-primary mb-3">
+                새 워크스페이스 만들기
+              </Text>
+              <TextInput
+                className="border border-border rounded-sm bg-white px-4 py-3 text-[15px] text-text-primary mb-3"
+                placeholder="이름 (예: 모던애자일)"
+                placeholderTextColor="#B8A898"
+                value={newName}
+                onChangeText={setNewName}
+                autoFocus
+              />
               <Pressable
-                className="bg-surface rounded-lg p-4 border border-border active:bg-surface-hover"
-                onPress={() => handleSelect(item.workspaceId, item.memberId)}
+                className="bg-primary rounded-lg py-3 items-center"
+                onPress={handleCreate}
+                disabled={creating || !newName.trim()}
+                style={{ opacity: creating || !newName.trim() ? 0.5 : 1 }}
               >
-                <Text className="text-[17px] font-medium text-text-primary">
-                  워크스페이스
-                </Text>
-                <Text className="text-[13px] text-text-muted mt-1">
-                  {item.role === "OWNER" ? "관리자" : "멤버"}
+                <Text className="text-white font-bold text-[15px]">
+                  {creating ? "생성 중..." : "만들기"}
                 </Text>
               </Pressable>
-            )}
-            ListEmptyComponent={
-              <View className="items-center py-8">
-                <Text className="text-text-subtle text-[15px]">
-                  참여 중인 워크스페이스가 없습니다
-                </Text>
-              </View>
-            }
-          />
-        )}
-
-        {showCreate ? (
-          <View className="mt-6 bg-surface rounded-lg p-4 border border-border">
-            <Text className="text-[15px] font-medium text-text-primary mb-3">
-              새 워크스페이스 만들기
-            </Text>
-            <TextInput
-              className="border border-border rounded-sm bg-white px-4 py-3 text-[15px] text-text-primary mb-3"
-              placeholder="이름 (예: 모던애자일)"
-              placeholderTextColor="#B8A898"
-              value={newName}
-              onChangeText={setNewName}
-              autoFocus
-            />
+            </View>
+          ) : (
             <Pressable
-              className="bg-primary rounded-lg py-3 items-center"
-              onPress={handleCreate}
-              disabled={creating || !newName.trim()}
-              style={{ opacity: creating || !newName.trim() ? 0.5 : 1 }}
+              className="mt-6 border-2 border-dashed border-border rounded-lg py-5 items-center active:bg-surface"
+              onPress={() => setShowCreate(true)}
             >
-              <Text className="text-white font-bold text-[15px]">
-                {creating ? "생성 중..." : "만들기"}
+              <Text className="text-text-muted font-medium text-[15px]">
+                + 새 워크스페이스 만들기
               </Text>
             </Pressable>
-          </View>
-        ) : (
-          <Pressable
-            className="mt-6 border-2 border-dashed border-border rounded-lg py-5 items-center active:bg-surface"
-            onPress={() => setShowCreate(true)}
-          >
-            <Text className="text-text-muted font-medium text-[15px]">
-              + 새 워크스페이스 만들기
-            </Text>
-          </Pressable>
-        )}
+          )}
 
-        <Pressable className="mt-auto mb-4 py-3 items-center" onPress={handleSignOut}>
-          <Text className="text-text-subtle text-[13px]">로그아웃</Text>
-        </Pressable>
+          <Pressable className="mb-4 py-3 items-center" onPress={handleSignOut}>
+            <Text className="text-text-subtle text-[13px]">로그아웃</Text>
+          </Pressable>
+        </KeyboardAvoidingView>
       </View>
     </SafeAreaView>
   );
