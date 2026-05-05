@@ -3,7 +3,11 @@ import { setContext } from "@apollo/client/link/context";
 import Constants from "expo-constants";
 import { useAuthStore } from "@shared/store/auth";
 
-const apiUrl = Constants.expoConfig?.extra?.apiUrl || "http://localhost:4000/graphql";
+const apiUrl = Constants.expoConfig?.extra?.apiUrl as string | undefined;
+
+if (!apiUrl) {
+  throw new Error("apiUrl is not configured in app.config.ts extra");
+}
 
 const httpLink = new HttpLink({ uri: apiUrl });
 

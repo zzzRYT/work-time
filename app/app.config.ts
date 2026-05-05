@@ -1,9 +1,7 @@
 import { ExpoConfig, ConfigContext } from "expo/config";
 
 const IS_DEV = process.env.APP_VARIANT === "development";
-const DEFAULT_API_URL = IS_DEV
-  ? "http://localhost:4000/graphql"
-  : "https://work-time-production.up.railway.app/graphql";
+const DEFAULT_API_URL = "https://work-time-production.up.railway.app/graphql";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
