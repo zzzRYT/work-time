@@ -12,10 +12,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useQuery, useMutation } from "@apollo/client";
 import { graphql } from "@graphql";
-import { useAuthStore } from "@shared/store/auth";
+import { router } from "expo-router";
 import { apolloClient } from "@shared/lib/apollo";
 import { useJoinWorkspaceByInvite } from "@shared/hooks/use-join-workspace-by-invite";
-import { router } from "expo-router";
+import { useAuthStore } from "@shared/store/auth";
 
 const MY_WORKSPACES = graphql(`
   query MyWorkspaces {
@@ -96,18 +96,23 @@ export default function WorkspacesScreen() {
         variables: { name: newName.trim() },
       });
       if (result?.createWorkspace) {
-        // After creating, refetch workspaces to get the membership with memberId
         const { data: refreshed } = await refetch();
         const newMembership = refreshed?.myWorkspaces?.find(
-          (w) => w.workspaceId === result.createWorkspace.id
+          (w) => w.workspaceId === result.createWorkspace.id,
         );
         if (newMembership) {
-          await navigateToWorkspace(newMembership.workspaceId, newMembership.memberId);
+          await navigateToWorkspace(
+            newMembership.workspaceId,
+            newMembership.memberId,
+          );
           navigated = true;
         }
       }
     } catch (e) {
-      Alert.alert("오류", e instanceof Error ? e.message : "워크스페이스 생성 실패");
+      Alert.alert(
+        "오류",
+        e instanceof Error ? e.message : "워크스페이스 생성 실패",
+      );
     } finally {
       if (!navigated) {
         setCreating(false);
@@ -151,7 +156,8 @@ export default function WorkspacesScreen() {
 
   const workspaces = data?.myWorkspaces ?? [];
   const createDisabled = actionInFlight || creating || !newName.trim();
-  const inviteDisabled = actionInFlight || joiningByInvite || !inviteInput.trim();
+  const inviteDisabled =
+    actionInFlight || joiningByInvite || !inviteInput.trim();
 
   return (
     <SafeAreaView className="flex-1 bg-bg">
@@ -163,40 +169,41 @@ export default function WorkspacesScreen() {
           참여할 스터디 그룹을 선택하세요
         </Text>
 
-        {loading ? (
-          <Text className="text-text-subtle text-center py-8">로딩중...</Text>
-        ) : (
-          <FlatList
-            data={workspaces}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={{ gap: 12 }}
-            renderItem={({ item }) => (
-              <Pressable
-                className="bg-surface rounded-lg p-4 border border-border active:bg-surface-hover"
-                onPress={() => handleSelect(item.workspaceId, item.memberId)}
-                disabled={actionInFlight}
-                style={{ opacity: actionInFlight ? 0.5 : 1 }}
-              >
-                <Text className="text-[17px] font-medium text-text-primary">
-                  워크스페이스
-                </Text>
-                <Text className="text-[13px] text-text-muted mt-1">
-                  {item.role === "OWNER" ? "관리자" : "멤버"}
-                </Text>
-              </Pressable>
-            )}
-            ListEmptyComponent={
-              <View className="items-center py-8">
-                <Text className="text-text-subtle text-[15px]">
-                  참여 중인 워크스페이스가 없습니다
-                </Text>
-              </View>
-            }
-          />
-        )}
+        <View className="flex-1">
+          {loading ? (
+            <Text className="text-text-subtle text-center py-8">로딩중...</Text>
+          ) : (
+            <FlatList
+              data={workspaces}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={{ gap: 12 }}
+              renderItem={({ item }) => (
+                <Pressable
+                  className="bg-surface rounded-lg p-4 border border-border active:bg-surface-hover"
+                  onPress={() => handleSelect(item.workspaceId, item.memberId)}
+                  disabled={actionInFlight}
+                  style={{ opacity: actionInFlight ? 0.5 : 1 }}
+                >
+                  <Text className="text-[17px] font-medium text-text-primary">
+                    워크스페이스
+                  </Text>
+                  <Text className="text-[13px] text-text-muted mt-1">
+                    {item.role === "OWNER" ? "관리자" : "멤버"}
+                  </Text>
+                </Pressable>
+              )}
+              ListEmptyComponent={
+                <View className="items-center py-8">
+                  <Text className="text-text-subtle text-[15px]">
+                    참여 중인 워크스페이스가 없습니다
+                  </Text>
+                </View>
+              }
+            />
+          )}
+        </View>
 
         <KeyboardAvoidingView
-          className="mt-auto"
           behavior={Platform.OS === "ios" ? "padding" : undefined}
           keyboardVerticalOffset={24}
         >

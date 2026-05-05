@@ -1,12 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, IsNull } from 'typeorm';
-import { MemberEntity } from '../../entities/member.entity';
 import { SessionEntity } from '../../entities/session.entity';
 import { DailyVacationEntity } from '../../entities/daily-vacation.entity';
 import { FULL_DAY_VACATION_HOURS } from '../../common/constants';
 import { VACATION_UNITS } from './vacation.constants';
-import { MemberNotFoundError } from '../member/errors/member-not-found.error';
+import { MemberService } from '../member/member.service';
 import { InvalidDateFormatError } from './errors/invalid-date-format.error';
 import {
   InvalidVacationHoursError,
@@ -18,12 +17,11 @@ import {
 @Injectable()
 export class VacationService {
   constructor(
-    @InjectRepository(MemberEntity)
-    private readonly memberRepo: Repository<MemberEntity>,
     @InjectRepository(SessionEntity)
     private readonly sessionRepo: Repository<SessionEntity>,
     @InjectRepository(DailyVacationEntity)
     private readonly vacationRepo: Repository<DailyVacationEntity>,
+    private readonly memberService: MemberService,
   ) {}
 
   private validateVacationHours(hours: number) {
@@ -38,22 +36,18 @@ export class VacationService {
     }
   }
 
-  private async ensureMemberExists(memberId: string) {
-    const member = await this.memberRepo.findOne({
-      where: { id: memberId },
-    });
-    if (!member) {
-      throw new MemberNotFoundError();
-    }
-  }
-
-  async useVacation(memberId: string, date: string, hours: number) {
+  async useVacation(
+    memberId: string,
+    workspaceId: string,
+    date: string,
+    hours: number,
+  ) {
     this.validateVacationHours(hours);
     this.validateDateFormat(date);
-    await this.ensureMemberExists(memberId);
+    await this.memberService.ensureMemberInWorkspace(memberId, workspaceId);
 
     const existing = await this.vacationRepo.findOne({
-      where: { memberId, date },
+      where: { memberId, workspaceId, date },
     });
     if (existing) {
       throw new VacationAlreadyExistsError();
@@ -61,32 +55,43 @@ export class VacationService {
 
     if (hours >= FULL_DAY_VACATION_HOURS) {
       const activeSession = await this.sessionRepo.findOne({
-        where: { memberId, date, checkOutTime: IsNull() },
+        where: { memberId, workspaceId, date, checkOutTime: IsNull() },
       });
       if (activeSession) {
         throw new ActiveSessionExistsError();
       }
     }
 
-    const vacation = this.vacationRepo.create({ memberId, date, hours });
+    const vacation = this.vacationRepo.create({
+      memberId,
+      workspaceId,
+      date,
+      hours,
+    });
     return this.vacationRepo.save(vacation);
   }
 
-  async useVacations(memberId: string, dates: string[], hours: number) {
+  async useVacations(
+    memberId: string,
+    workspaceId: string,
+    dates: string[],
+    hours: number,
+  ) {
     this.validateVacationHours(hours);
     for (const date of dates) {
       this.validateDateFormat(date);
     }
-    await this.ensureMemberExists(memberId);
+    await this.memberService.ensureMemberInWorkspace(memberId, workspaceId);
 
     const existingVacations = await this.vacationRepo.find({
-      where: { memberId, date: In(dates) },
+      where: { memberId, workspaceId, date: In(dates) },
     });
     const existingDates = new Set(existingVacations.map((v) => v.date));
 
     const succeeded: Array<{
       id: string;
       memberId: string;
+      workspaceId: string;
       date: string;
       hours: number;
     }> = [];
@@ -104,7 +109,7 @@ export class VacationService {
       try {
         if (hours >= FULL_DAY_VACATION_HOURS) {
           const activeSession = await this.sessionRepo.findOne({
-            where: { memberId, date, checkOutTime: IsNull() },
+            where: { memberId, workspaceId, date, checkOutTime: IsNull() },
           });
           if (activeSession) {
             failed.push({
@@ -115,7 +120,12 @@ export class VacationService {
           }
         }
 
-        const vacation = this.vacationRepo.create({ memberId, date, hours });
+        const vacation = this.vacationRepo.create({
+          memberId,
+          workspaceId,
+          date,
+          hours,
+        });
         const saved = await this.vacationRepo.save(vacation);
         succeeded.push(saved);
       } catch {
@@ -126,11 +136,15 @@ export class VacationService {
     return { succeeded, failed };
   }
 
-  async cancelVacation(memberId: string, date: string) {
+  async cancelVacation(memberId: string, workspaceId: string, date: string) {
     this.validateDateFormat(date);
-    await this.ensureMemberExists(memberId);
+    await this.memberService.ensureMemberInWorkspace(memberId, workspaceId);
 
-    const result = await this.vacationRepo.delete({ memberId, date });
+    const result = await this.vacationRepo.delete({
+      memberId,
+      workspaceId,
+      date,
+    });
     if (result.affected === 0) {
       throw new VacationNotFoundError();
     }

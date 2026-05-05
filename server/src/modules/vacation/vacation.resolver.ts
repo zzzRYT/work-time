@@ -4,6 +4,7 @@ import { DailyVacation } from './dto/daily-vacation.object';
 import { UseVacationsResult } from './dto/use-vacations-result.object';
 import { VacationService } from './vacation.service';
 import { WorkspaceGuard } from '../auth/workspace.guard';
+import { CurrentWorkspace } from '../auth/decorators/current-workspace.decorator';
 
 @Resolver(() => DailyVacation)
 export class VacationResolver {
@@ -15,8 +16,9 @@ export class VacationResolver {
     @Args('memberId', { type: () => ID }) memberId: string,
     @Args('date') date: string,
     @Args('hours', { type: () => Int }) hours: number,
+    @CurrentWorkspace() workspaceId: string,
   ) {
-    return this.vacationService.useVacation(memberId, date, hours);
+    return this.vacationService.useVacation(memberId, workspaceId, date, hours);
   }
 
   @Mutation(() => UseVacationsResult, { description: '다중 날짜 휴가 일괄 등록' })
@@ -25,8 +27,9 @@ export class VacationResolver {
     @Args('memberId', { type: () => ID }) memberId: string,
     @Args('dates', { type: () => [String] }) dates: string[],
     @Args('hours', { type: () => Int }) hours: number,
+    @CurrentWorkspace() workspaceId: string,
   ) {
-    return this.vacationService.useVacations(memberId, dates, hours);
+    return this.vacationService.useVacations(memberId, workspaceId, dates, hours);
   }
 
   @Mutation(() => Boolean, { description: '휴가 취소' })
@@ -34,7 +37,8 @@ export class VacationResolver {
   async cancelVacation(
     @Args('memberId', { type: () => ID }) memberId: string,
     @Args('date') date: string,
+    @CurrentWorkspace() workspaceId: string,
   ): Promise<boolean> {
-    return this.vacationService.cancelVacation(memberId, date);
+    return this.vacationService.cancelVacation(memberId, workspaceId, date);
   }
 }

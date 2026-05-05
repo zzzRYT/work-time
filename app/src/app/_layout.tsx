@@ -3,8 +3,10 @@ import { initSentry } from "@shared/lib/sentry";
 initSentry();
 
 import { useEffect } from "react";
+import { useQuery } from "@apollo/client";
 import { Slot, useRouter, useSegments } from "expo-router";
-import { Providers } from "@app/providers";
+import { Providers } from "@shared/providers";
+import { graphql } from "@graphql";
 import { useAuthStore } from "@shared/store/auth";
 import { Alert, Text, View } from "react-native";
 import {
@@ -25,11 +27,47 @@ function isTerminalInviteFailure(error: unknown) {
   return TERMINAL_INVITE_FAILURE_MESSAGES.includes(error.message);
 }
 
+const MY_WORKSPACES = graphql(`
+  query RootMyWorkspaces {
+    myWorkspaces {
+      workspaceId
+      memberId
+    }
+  }
+`);
+
 function RootNavigator() {
   const router = useRouter();
   const segments = useSegments();
-  const { session, workspaceId, isLoaded } = useAuthStore();
+  const { session, workspaceId, memberId, isLoaded, clearWorkspace } =
+    useAuthStore();
   const { joinByInvite, loading: inviteJoinLoading } = useJoinWorkspaceByInvite();
+  const hasPartialWorkspaceState = !!session && (!!workspaceId !== !!memberId);
+  const shouldValidateWorkspace =
+    isLoaded && !!session && !!workspaceId && !!memberId;
+  const { data } = useQuery(MY_WORKSPACES, {
+    skip: !shouldValidateWorkspace,
+    fetchPolicy: "network-only",
+  });
+  const savedWorkspaceIsInvalid =
+    shouldValidateWorkspace &&
+    !!data &&
+    !data.myWorkspaces.some(
+      (membership) =>
+        membership.workspaceId === workspaceId &&
+        membership.memberId === memberId,
+    );
+
+  useEffect(() => {
+    if (isLoaded && (hasPartialWorkspaceState || savedWorkspaceIsInvalid)) {
+      clearWorkspace();
+    }
+  }, [
+    isLoaded,
+    hasPartialWorkspaceState,
+    savedWorkspaceIsInvalid,
+    clearWorkspace,
+  ]);
 
   useEffect(() => {
     if (!isLoaded || !session) return;
@@ -76,6 +114,10 @@ function RootNavigator() {
 
   useEffect(() => {
     if (!isLoaded) return;
+    if (inviteJoinLoading) return;
+    if (shouldValidateWorkspace && !data) return;
+    if (hasPartialWorkspaceState) return;
+    if (savedWorkspaceIsInvalid) return;
 
     const inTabs = segments[0] === "(tabs)";
     const onLogin = segments[0] === "login";
@@ -86,12 +128,29 @@ function RootNavigator() {
       router.replace("/login");
     } else if (session && !workspaceId && !onWorkspaces && !onJoin) {
       router.replace("/workspaces");
-    } else if (session && workspaceId && !inTabs && !onJoin) {
+    } else if (session && workspaceId && memberId && !inTabs && !onJoin) {
       router.replace("/(tabs)");
     }
-  }, [session, workspaceId, isLoaded, segments]);
+  }, [
+    session,
+    workspaceId,
+    memberId,
+    isLoaded,
+    segments,
+    hasPartialWorkspaceState,
+    shouldValidateWorkspace,
+    inviteJoinLoading,
+    data,
+    savedWorkspaceIsInvalid,
+  ]);
 
-  if (inviteJoinLoading || !isLoaded) {
+  if (
+    inviteJoinLoading ||
+    !isLoaded ||
+    hasPartialWorkspaceState ||
+    (shouldValidateWorkspace && !data) ||
+    savedWorkspaceIsInvalid
+  ) {
     return (
       <View className="flex-1 bg-bg items-center justify-center">
         <Text className="text-text-subtle">로딩중...</Text>

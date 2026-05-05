@@ -6,11 +6,12 @@ import { AuthService } from './auth.service';
 import { AuthResolver } from './auth.resolver';
 import { AuthGuard } from './auth.guard';
 import { WorkspaceGuard } from './workspace.guard';
+import { AdminGuard } from './admin.guard';
 
 @Global()
 @Module({
   imports: [TypeOrmModule.forFeature([UserEntity, WorkspaceMemberEntity])],
-  providers: [AuthService, AuthResolver, AuthGuard, WorkspaceGuard],
-  exports: [AuthService],
+  providers: [AuthService, AuthResolver, AuthGuard, WorkspaceGuard, AdminGuard],
+  exports: [AuthService, AuthGuard, WorkspaceGuard, AdminGuard],
 })
 export class AuthModule {}
