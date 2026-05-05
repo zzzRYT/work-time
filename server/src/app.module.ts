@@ -55,7 +55,7 @@ const dbConfig = process.env.DATABASE_URL
         MonthlyFeeEntity,
         SettingsEntity,
       ],
-      synchronize: process.env.NODE_ENV !== 'production',
+      synchronize: process.env.DB_SYNCHRONIZE === 'true',
       logging: process.env.NODE_ENV !== 'production',
       ssl: process.env.DATABASE_URL?.includes('supabase')
         ? { rejectUnauthorized: false }

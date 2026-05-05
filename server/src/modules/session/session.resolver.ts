@@ -31,8 +31,9 @@ export class SessionResolver {
   @UseGuards(WorkspaceGuard)
   async activeSession(
     @Args('memberId', { type: () => ID }) memberId: string,
+    @CurrentWorkspace() workspaceId: string,
   ): Promise<SessionEntity | null> {
-    return this.sessionService.getActiveSession(memberId);
+    return this.sessionService.getActiveSession(memberId, workspaceId);
   }
 
   @Query(() => AttendanceSummary, { description: '오늘의 출석 요약' })
@@ -48,8 +49,9 @@ export class SessionResolver {
   async dayDetail(
     @Args('memberId', { type: () => ID }) memberId: string,
     @Args('date') date: string,
+    @CurrentWorkspace() workspaceId: string,
   ) {
-    return this.sessionService.getDayDetail(memberId, date);
+    return this.sessionService.getDayDetail(memberId, date, workspaceId);
   }
 
   @Query(() => [CalendarDay], { description: '특정 멤버의 월간 캘린더' })
@@ -58,8 +60,9 @@ export class SessionResolver {
     @Args('memberId', { type: () => ID }) memberId: string,
     @Args('year', { type: () => Int }) year: number,
     @Args('month', { type: () => Int }) month: number,
+    @CurrentWorkspace() workspaceId: string,
   ) {
-    return this.sessionService.getCalendar(memberId, year, month);
+    return this.sessionService.getCalendar(memberId, year, month, workspaceId);
   }
 
   @Query(() => MonthlySummaryResult, { description: '특정 멤버의 월간 요약' })
@@ -86,8 +89,9 @@ export class SessionResolver {
   @UseGuards(WorkspaceGuard)
   async checkOut(
     @Args('memberId', { type: () => ID }) memberId: string,
+    @CurrentWorkspace() workspaceId: string,
   ): Promise<SessionEntity> {
-    return this.sessionService.checkOut(memberId);
+    return this.sessionService.checkOut(memberId, workspaceId);
   }
 
   @ResolveField(() => Int, {

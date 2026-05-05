@@ -7,6 +7,7 @@ import { FeeService } from './fee.service';
 import { RankingPeriod } from './enums/ranking-period.enum';
 import { FeeType } from './enums/fee-type.enum';
 import { WorkspaceGuard } from '../auth/workspace.guard';
+import { AdminGuard } from '../auth/admin.guard';
 import { CurrentWorkspace } from '../auth/decorators/current-workspace.decorator';
 
 @Resolver(() => MonthlyFee)
@@ -39,31 +40,34 @@ export class FeeResolver {
     @Args('memberId', { type: () => ID }) memberId: string,
     @Args('month') month: string,
     @Args('type', { type: () => FeeType }) type: FeeType,
+    @CurrentWorkspace() workspaceId: string,
   ) {
-    return this.feeService.requestFeePayment(memberId, month, type);
+    return this.feeService.requestFeePayment(memberId, workspaceId, month, type);
   }
 
   @Mutation(() => MonthlyFee, {
     description: '어드민이 납부 확인 (PENDING → PAID)',
   })
-  @UseGuards(WorkspaceGuard)
+  @UseGuards(AdminGuard)
   async confirmFeePayment(
     @Args('memberId', { type: () => ID }) memberId: string,
     @Args('month') month: string,
     @Args('type', { type: () => FeeType }) type: FeeType,
+    @CurrentWorkspace() workspaceId: string,
   ) {
-    return this.feeService.confirmFeePayment(memberId, month, type);
+    return this.feeService.confirmFeePayment(memberId, workspaceId, month, type);
   }
 
   @Mutation(() => MonthlyFee, {
     description: '어드민이 납부 거절 (PENDING → UNPAID)',
   })
-  @UseGuards(WorkspaceGuard)
+  @UseGuards(AdminGuard)
   async rejectFeePayment(
     @Args('memberId', { type: () => ID }) memberId: string,
     @Args('month') month: string,
     @Args('type', { type: () => FeeType }) type: FeeType,
+    @CurrentWorkspace() workspaceId: string,
   ) {
-    return this.feeService.rejectFeePayment(memberId, month, type);
+    return this.feeService.rejectFeePayment(memberId, workspaceId, month, type);
   }
 }
