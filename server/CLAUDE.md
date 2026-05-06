@@ -5,9 +5,10 @@
 
 ## Stack
 
-- NestJS 11 + TypeORM 0.3 + PostgreSQL (Supabase)
-- GraphQL (Apollo) + REST 공존
-- 패키지 매니저: **npm** (bun/pnpm 섞지 말 것)
+- NestJS 11 + MikroORM 6 (postgresql) + PostgreSQL (Supabase)
+- DDD + Hexagonal Architecture + CQRS (`@nestjs/cqrs`)
+- GraphQL (Apollo, code-first)
+- 패키지 매니저: **npm**
 - 테스트: Jest (ts-jest)
 - 에러 트래킹: Sentry
 
@@ -15,15 +16,14 @@
 
 ```
 src/
-  main.ts              부트스트랩
+  main.ts              부트스트랩 (+ /health 라우트 inline)
   app.module.ts        루트 모듈
   sentry.ts            Sentry 초기화
-  common/              공용 유틸·상수·enum
-  entities/            TypeORM 엔티티 (전역 모음)
-  modules/             기능 모듈
-    auth/ workspace/ member/ invite/ session/
-    settings/ vacation/ fee/
-  health/              헬스체크
+  libs/                재사용 추상화 (DDD/ORM/Auth/Exceptions/Utils)
+    ddd/ orm/ auth/ exceptions/ utils/
+  features/            기능 모듈 (DDD + Hexagonal)
+    {name}/domain/ application/ infrastructure/ graphql/
+migrations/            MikroORM 마이그레이션
 ```
 
 ## Module Convention
@@ -43,13 +43,12 @@ modules/{feature}/
 
 ## Local Rules
 
-1. 엔티티는 `src/entities/`에 모은다 — 모듈별 분산 금지
+1. ORM 엔티티는 `features/{name}/infrastructure/orm-entities/` — 도메인 엔티티는 `features/{name}/domain/`
 2. 새 기능 모듈은 `src/modules/{name}/` 하위, 평탄 구조 금지
-3. DB 접근은 TypeORM Repository 경유 — raw SQL·Supabase client 직접 사용 금지
+3. DB 접근은 MikroORM `EntityRepository` 경유 — raw SQL·Supabase client 직접 사용 금지
 4. 환경변수는 `ConfigService` 경유, `process.env` 직접 참조 금지
 5. Strict equality만 사용 (`===`, `!==`)
-6. Import는 path alias `~/` 사용 — `~/` = `src/`
-   - 예: `import { UserEntity } from '~/entities'`
+6. Import는 path alias 사용 — 새 파일은 `~/libs`, `~/features` 사용
 7. **Claude는 dev 서버/build/lint를 직접 실행하지 않는다.**
    - 허용: `npx tsc --noEmit` (타입체크), `npm test` (Jest)
 
