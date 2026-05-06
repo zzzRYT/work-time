@@ -1,8 +1,8 @@
 import { CanActivate, ExecutionContext, Inject, Injectable } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { AUTH_PORT, IAuthPort } from '../../../libs/auth/auth.port';
-import { UnauthorizedException } from '../../../libs/exceptions/unauthorized.exception';
-import { GraphQLContext } from '../../../libs/graphql/graphql-context.type';
+import { AUTH_PORT, IAuthPort } from '~/libs/auth/auth.port';
+import { UnauthorizedException } from '~/libs/exceptions/unauthorized.exception';
+import { GraphQLContext } from '~/libs/graphql/graphql-context.type';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {

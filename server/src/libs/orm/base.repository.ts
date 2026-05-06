@@ -1,8 +1,8 @@
 import { EntityManager, EntityRepository, FilterQuery } from '@mikro-orm/core';
-import { AggregateRoot } from '../ddd/aggregate-root.base';
-import { IMapper } from '../ddd/mapper.interface';
-import { RepositoryPort } from '../ddd/repository.port';
-import { NotFoundException } from '../exceptions/not-found.exception';
+import { AggregateRoot } from '~/libs/ddd/aggregate-root.base';
+import { IMapper } from '~/libs/ddd/mapper.interface';
+import { RepositoryPort } from '~/libs/ddd/repository.port';
+import { NotFoundException } from '~/libs/exceptions/not-found.exception';
 import { OrmEntityBase } from './orm-entity.base';
 
 export abstract class BaseRepository<
