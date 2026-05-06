@@ -58,7 +58,12 @@ features/{name}/
 5. Strict equality만 사용 (`===`, `!==`)
 6. Import는 path alias 사용 — 새 파일은 `~/libs`, `~/features` 사용
 7. **제어문(`if`, `else`, `for`, `while`)은 절대 한 줄로 끝내지 말 것** — 항상 `{}` 블록을 다음 줄로 개행. 예: `if (!x) return;` 금지, `if (!x) { return; }`도 금지. 본문은 반드시 별도 줄.
-8. **Claude는 dev 서버/build/lint를 직접 실행하지 않는다.**
+8. **주제가 바뀌면 빈 줄을 둔다** — 같은 파일/함수 안에서 의도가 달라지는 지점마다 1줄 공백.
+   - 함수 본문: 입력 추출 → 검증 → 비즈니스 로직 → 반환 등 단계 사이 빈 줄
+   - 클래스 멤버: 필드/생성자/getter/mutator/comparator 그룹 사이 빈 줄
+   - 무의미한 빈 줄 남발 금지 — 같은 주제 안에선 붙여 쓴다
+   - **import는 예외**: 한 덩어리로 둔다 (외부/내부 분리 안 함)
+9. **Claude는 dev 서버/build/lint를 직접 실행하지 않는다.**
    - 허용: `npx tsc --noEmit` (타입체크), `npm test` (Jest)
 
 ## Commands

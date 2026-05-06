@@ -1,6 +1,6 @@
 import { ExecutionContext } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { UnauthorizedException } from '~/libs/exceptions/unauthorized.exception';
+import { AppException } from '~/libs/exceptions/app-exception.base';
 import { AuthUser } from '~/libs/auth/auth.port';
 import { GraphQLContext } from '~/libs/graphql/graphql-context.type';
 import { currentUserFactory, CurrentUser } from '../current-user.decorator';
@@ -10,9 +10,11 @@ describe('@CurrentUser', () => {
     const gqlContext: GraphQLContext = {
       req: { headers: {}, user } as GraphQLContext['req'],
     };
+
     jest.spyOn(GqlExecutionContext, 'create').mockReturnValue({
       getContext: () => gqlContext,
     } as unknown as GqlExecutionContext);
+
     return {} as ExecutionContext;
   }
 
@@ -28,9 +30,15 @@ describe('@CurrentUser', () => {
     expect(result).toEqual(user);
   });
 
-  it('req.user가 없으면 UnauthorizedException을 던진다', () => {
-    expect(() => currentUserFactory(undefined, makeContext(undefined))).toThrow(
-      UnauthorizedException,
-    );
+  it('req.user가 없으면 일반 Error를 던진다 (AppException 아님 → 필터에서 INTERNAL_ERROR/500 sanitize)', () => {
+    let caught: unknown;
+    try {
+      currentUserFactory(undefined, makeContext(undefined));
+    } catch (e) {
+      caught = e;
+    }
+
+    expect(caught).toBeInstanceOf(Error);
+    expect(caught).not.toBeInstanceOf(AppException);
   });
 });
