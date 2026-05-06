@@ -28,13 +28,17 @@ export abstract class Entity<T> {
   }
 
   delete(): void {
-    if (this._deletedAt) return;
+    if (this._deletedAt) {
+      return;
+    }
     this._deletedAt = new Date();
     this._updatedAt = this._deletedAt;
   }
 
   restore(): void {
-    if (!this._deletedAt) return;
+    if (!this._deletedAt) {
+      return;
+    }
     this._deletedAt = undefined;
     this.touch();
   }

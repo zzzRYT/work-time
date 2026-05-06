@@ -11,7 +11,9 @@ export class JwtAuthGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const gqlCtx = GqlExecutionContext.create(context).getContext<GraphQLContext>();
     const header = gqlCtx.req.headers.authorization;
-    if (!header) throw new UnauthorizedException('Missing Authorization header');
+    if (!header) {
+      throw new UnauthorizedException('Missing Authorization header');
+    }
 
     const [scheme, token] = header.split(' ');
     if (scheme !== 'Bearer' || !token) {

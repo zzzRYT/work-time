@@ -49,7 +49,8 @@ modules/{feature}/
 4. 환경변수는 `ConfigService` 경유, `process.env` 직접 참조 금지
 5. Strict equality만 사용 (`===`, `!==`)
 6. Import는 path alias 사용 — 새 파일은 `~/libs`, `~/features` 사용
-7. **Claude는 dev 서버/build/lint를 직접 실행하지 않는다.**
+7. **제어문(`if`, `else`, `for`, `while`)은 절대 한 줄로 끝내지 말 것** — 항상 `{}` 블록을 다음 줄로 개행. 예: `if (!x) return;` 금지, `if (!x) { return; }`도 금지. 본문은 반드시 별도 줄.
+8. **Claude는 dev 서버/build/lint를 직접 실행하지 않는다.**
    - 허용: `npx tsc --noEmit` (타입체크), `npm test` (Jest)
 
 ## Commands

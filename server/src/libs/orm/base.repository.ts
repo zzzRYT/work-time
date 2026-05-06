@@ -24,7 +24,9 @@ export abstract class BaseRepository<
 
   async findByIdOrThrow(id: string): Promise<TDomain> {
     const entity = await this.findById(id);
-    if (!entity) throw new NotFoundException(this.entityName, id);
+    if (!entity) {
+      throw new NotFoundException(this.entityName, id);
+    }
     return entity;
   }
 

@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
-import { APP_FILTER } from '@nestjs/core';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { CqrsModule } from '@nestjs/cqrs';
 import type { Request } from 'express';
 import mikroOrmConfig from './libs/orm/mikro-orm.config';
@@ -26,6 +26,7 @@ import { AuthModule } from './features/auth/auth.module';
   ],
   providers: [
     { provide: APP_FILTER, useClass: GqlExceptionFilter },
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
 export class AppModule {}
