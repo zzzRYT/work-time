@@ -5,9 +5,10 @@
 
 ## Stack
 
-- NestJS 11 + TypeORM 0.3 + PostgreSQL (Supabase)
-- GraphQL (Apollo) + REST 공존
-- 패키지 매니저: **npm** (bun/pnpm 섞지 말 것)
+- NestJS 11 + MikroORM 6 (postgresql) + PostgreSQL (Supabase)
+- DDD + Hexagonal Architecture + CQRS (`@nestjs/cqrs`)
+- GraphQL (Apollo, code-first)
+- 패키지 매니저: **npm**
 - 테스트: Jest (ts-jest)
 - 에러 트래킹: Sentry
 
@@ -15,42 +16,54 @@
 
 ```
 src/
-  main.ts              부트스트랩
+  main.ts              부트스트랩 (+ /health 라우트 inline)
   app.module.ts        루트 모듈
   sentry.ts            Sentry 초기화
-  common/              공용 유틸·상수·enum
-  entities/            TypeORM 엔티티 (전역 모음)
-  modules/             기능 모듈
-    auth/ workspace/ member/ invite/ session/
-    settings/ vacation/ fee/
-  health/              헬스체크
+  libs/                재사용 추상화 (DDD/ORM/Auth/Exceptions/Utils)
+    ddd/ orm/ auth/ exceptions/ utils/
+  features/            기능 모듈 (DDD + Hexagonal)
+    {name}/domain/ application/ infrastructure/ graphql/
+migrations/            MikroORM 마이그레이션
 ```
 
 ## Module Convention
 
-모듈은 얇게 시작. 레이어는 **필요할 때** 추가하고, 빈 폴더는 만들지 말 것.
+각 feature는 `features/{name}/` 하위에 DDD + Hexagonal 레이어로 구성:
 
 ```
-modules/{feature}/
+features/{name}/
+  domain/                  # AggregateRoot, ValueObject, DomainEvent
+  application/             # Commands/Queries/Handlers, Ports
+  infrastructure/          # ORM entities, Repositories, Adapters
+  graphql/
+    resolvers/             # {feature}.queries.ts, {feature}.mutations.ts (복수형 클래스명)
+    schemas/inputs/, models/, enums/
   {feature}.module.ts
-  {feature}.service.ts
-  {feature}.resolver.ts      # GraphQL 있을 때
-  {feature}.controller.ts    # REST 있을 때
-  dto/
-  guards/, decorators/       # 필요할 때만
-  utils/                     # 도메인 유틸 (필요할 때만)
 ```
+
+레이어는 **필요할 때** 추가, 빈 폴더 금지.
+
+### Resolver 네이밍
+
+- 클래스명은 항상 **복수형**: `AuthQueriesResolver`, `WorkspaceMutationsResolver`
+- 메서드 1개여도 복수형 유지 — Plan 2+에서 추가될 때 일관성 유지
+- 파일명도 동일: `auth.queries.ts`, `workspace.mutations.ts`
 
 ## Local Rules
 
-1. 엔티티는 `src/entities/`에 모은다 — 모듈별 분산 금지
+1. ORM 엔티티는 `features/{name}/infrastructure/orm-entities/` — 도메인 엔티티는 `features/{name}/domain/`
 2. 새 기능 모듈은 `src/modules/{name}/` 하위, 평탄 구조 금지
-3. DB 접근은 TypeORM Repository 경유 — raw SQL·Supabase client 직접 사용 금지
+3. DB 접근은 MikroORM `EntityRepository` 경유 — raw SQL·Supabase client 직접 사용 금지
 4. 환경변수는 `ConfigService` 경유, `process.env` 직접 참조 금지
 5. Strict equality만 사용 (`===`, `!==`)
-6. Import는 path alias `~/` 사용 — `~/` = `src/`
-   - 예: `import { UserEntity } from '~/entities'`
-7. **Claude는 dev 서버/build/lint를 직접 실행하지 않는다.**
+6. Import는 path alias 사용 — 새 파일은 `~/libs`, `~/features` 사용
+7. **제어문(`if`, `else`, `for`, `while`)은 절대 한 줄로 끝내지 말 것** — 항상 `{}` 블록을 다음 줄로 개행. 예: `if (!x) return;` 금지, `if (!x) { return; }`도 금지. 본문은 반드시 별도 줄.
+8. **주제가 바뀌면 빈 줄을 둔다** — 같은 파일/함수 안에서 의도가 달라지는 지점마다 1줄 공백.
+   - 함수 본문: 입력 추출 → 검증 → 비즈니스 로직 → 반환 등 단계 사이 빈 줄
+   - 클래스 멤버: 필드/생성자/getter/mutator/comparator 그룹 사이 빈 줄
+   - 무의미한 빈 줄 남발 금지 — 같은 주제 안에선 붙여 쓴다
+   - **import는 예외**: 한 덩어리로 둔다 (외부/내부 분리 안 함)
+9. **Claude는 dev 서버/build/lint를 직접 실행하지 않는다.**
    - 허용: `npx tsc --noEmit` (타입체크), `npm test` (Jest)
 
 ## Commands

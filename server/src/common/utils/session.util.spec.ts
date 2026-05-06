@@ -1,17 +1,14 @@
 import { countLateDays } from './session.util';
-import type { SessionEntity } from '../../entities/session.entity';
 
-function makeSession(overrides: Partial<SessionEntity>): SessionEntity {
+interface SessionShape {
+  date: string;
+  isLate: boolean;
+}
+
+function makeSession(overrides: Partial<SessionShape>): SessionShape {
   return {
-    id: 'test-id',
-    memberId: 'member-1',
     date: '2026-03-28',
-    checkInTime: new Date('2026-03-28T01:00:00Z'),
-    checkOutTime: new Date('2026-03-28T03:00:00Z'),
     isLate: false,
-    workspaceId: 'ws-1',
-    createdAt: new Date(),
-    member: {} as any,
     ...overrides,
   };
 }
