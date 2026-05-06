@@ -18,6 +18,10 @@ async function bootstrap() {
   ];
   app.enableCors({ origin: allowedOrigins });
 
+  app.use('/health', (_req: unknown, res: { json: (b: unknown) => void }) => {
+    res.json({ status: 'ok' });
+  });
+
   const port = Number(process.env.PORT) || 4000;
   await app.listen(port);
 
