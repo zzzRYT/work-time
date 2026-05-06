@@ -28,18 +28,26 @@ migrations/            MikroORM 마이그레이션
 
 ## Module Convention
 
-모듈은 얇게 시작. 레이어는 **필요할 때** 추가하고, 빈 폴더는 만들지 말 것.
+각 feature는 `features/{name}/` 하위에 DDD + Hexagonal 레이어로 구성:
 
 ```
-modules/{feature}/
+features/{name}/
+  domain/                  # AggregateRoot, ValueObject, DomainEvent
+  application/             # Commands/Queries/Handlers, Ports
+  infrastructure/          # ORM entities, Repositories, Adapters
+  graphql/
+    resolvers/             # {feature}.queries.ts, {feature}.mutations.ts (복수형 클래스명)
+    schemas/inputs/, models/, enums/
   {feature}.module.ts
-  {feature}.service.ts
-  {feature}.resolver.ts      # GraphQL 있을 때
-  {feature}.controller.ts    # REST 있을 때
-  dto/
-  guards/, decorators/       # 필요할 때만
-  utils/                     # 도메인 유틸 (필요할 때만)
 ```
+
+레이어는 **필요할 때** 추가, 빈 폴더 금지.
+
+### Resolver 네이밍
+
+- 클래스명은 항상 **복수형**: `AuthQueriesResolver`, `WorkspaceMutationsResolver`
+- 메서드 1개여도 복수형 유지 — Plan 2+에서 추가될 때 일관성 유지
+- 파일명도 동일: `auth.queries.ts`, `workspace.mutations.ts`
 
 ## Local Rules
 
