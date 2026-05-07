@@ -21,7 +21,6 @@ export abstract class Entity<T> {
   get createdAt(): Date { return this._createdAt; }
   get updatedAt(): Date { return this._updatedAt; }
   get deletedAt(): Date | undefined { return this._deletedAt; }
-  get isDeleted(): boolean { return this._deletedAt !== undefined; }
 
   protected touch(): void {
     this._updatedAt = new Date();
