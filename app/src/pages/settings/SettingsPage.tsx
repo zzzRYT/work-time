@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { ActivityIndicator, ScrollView, Text, View } from "react-native";
 import { useQuery, useMutation } from "@apollo/client";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -48,40 +48,9 @@ export function SettingsPage() {
   const currentWorkspaceMembership = data?.myWorkspaces.find(
     (membership) => membership.workspaceId === workspaceId,
   );
-  const isOwner = currentWorkspaceMembership?.role === "OWNER";
-  const isAdmin = currentMember?.role === "ADMIN";
-
-  useEffect(() => {
-    if (loading) return;
-    console.log("[settings:perm-debug]", {
-      authStore: { workspaceId, memberId, hasSession: !!session },
-      query: {
-        loading,
-        errorMessage: error?.message ?? null,
-        myWorkspacesCount: data?.myWorkspaces?.length ?? null,
-        membersCount: data?.members?.length ?? null,
-        hasSettings: !!data?.settings,
-      },
-      lookup: {
-        currentWorkspaceMembershipFound: !!currentWorkspaceMembership,
-        currentWorkspaceRole: currentWorkspaceMembership?.role ?? null,
-        currentMemberFound: !!currentMember,
-        currentMemberRole: currentMember?.role ?? null,
-      },
-      flags: { isOwner, isAdmin },
-    });
-  }, [
-    loading,
-    error,
-    data,
-    workspaceId,
-    memberId,
-    session,
-    currentWorkspaceMembership,
-    currentMember,
-    isOwner,
-    isAdmin,
-  ]);
+  const canManageSettings =
+    currentMember?.role === "ADMIN" ||
+    currentWorkspaceMembership?.role === "OWNER";
 
   const fallbackName = session?.user?.email?.split("@")[0] ?? "사용자";
 
@@ -227,7 +196,7 @@ export function SettingsPage() {
           </View>
         )}
 
-        {isOwner && (
+        {canManageSettings && (
           <InviteSection
             className="mb-4"
             onShared={() =>
@@ -237,7 +206,7 @@ export function SettingsPage() {
           />
         )}
 
-        {isAdmin && pendingItems.length > 0 && (
+        {canManageSettings && pendingItems.length > 0 && (
           <FeeConfirmSection
             items={pendingItems}
             onConfirm={handleConfirmPayment}
@@ -246,7 +215,7 @@ export function SettingsPage() {
           />
         )}
 
-        {isAdmin && (
+        {canManageSettings && (
           <RoleSection
             members={members}
             onRoleChange={handleRoleChange}
@@ -254,7 +223,7 @@ export function SettingsPage() {
           />
         )}
 
-        {isAdmin && settings && (
+        {canManageSettings && settings && (
           <>
             <StudyTimeSection
               currentHour={settings.studyStartHour}
