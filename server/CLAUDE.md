@@ -63,8 +63,16 @@ features/{name}/
    - 클래스 멤버: 필드/생성자/getter/mutator/comparator 그룹 사이 빈 줄
    - 무의미한 빈 줄 남발 금지 — 같은 주제 안에선 붙여 쓴다
    - **import는 예외**: 한 덩어리로 둔다 (외부/내부 분리 안 함)
-9. **Claude는 dev 서버/build/lint를 직접 실행하지 않는다.**
-   - 허용: `npx tsc --noEmit` (타입체크), `npm test` (Jest)
+9. **`!` (definite assignment assertion)은 프레임워크가 채워주는 필드에만 사용**
+   - 허용:
+     - ORM 엔티티(MikroORM이 DB에서 hydrate): `@PrimaryKey() id!: string`
+     - GraphQL ObjectType(리졸버가 plain object 반환 → NestJS가 모양 매핑): `@Field() id!: string`
+   - 금지:
+     - 도메인 엔티티 — 생성자에서 명시적으로 할당 (`this._id = props.id`)
+     - 서비스·유틸·핸들러 등 일반 클래스 — `strictPropertyInitialization` 회피용으로 쓰지 말 것 (실제 init 누락 버그를 가림)
+   - 이유: `!`는 "외부가 책임지고 채운다"의 단언이라 그 책임자가 명확한 경우(MikroORM hydration / NestJS GraphQL 매핑)에만 의미 있음
+10. **Claude는 dev 서버/build/lint를 직접 실행하지 않는다.**
+    - 허용: `npx tsc --noEmit` (타입체크), `npm test` (Jest)
 
 ## Commands
 
