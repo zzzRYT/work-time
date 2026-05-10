@@ -1,0 +1,49 @@
+name: 버그 리포트
+description: 잘못된 동작을 발견했을 때
+labels: ["type: bug"]
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: 재현 단계
+      description: 버그를 재현하는 방법을 순서대로 적어주세요.
+      placeholder: |
+        1. ...
+        2. ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 예상 동작
+      description: 원래 어떻게 동작해야 하나요?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 실제 동작
+      description: 실제로 어떻게 동작했나요? 스크린샷이 있으면 첨부해주세요.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: 발생 위치
+      options:
+        - app
+        - server
+        - 공통
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: 환경
+      description: OS, 앱 버전, 디바이스 등
+      placeholder: "iOS 17 / iPhone 15, 앱 v1.0.0"

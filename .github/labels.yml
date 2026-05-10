@@ -1,0 +1,34 @@
+# type
+- name: "type: bug"
+  color: "d73a4a"
+  description: "잘못된 동작"
+
+- name: "type: feature"
+  color: "0075ca"
+  description: "새 기능 또는 개선"
+
+- name: "type: docs"
+  color: "cfd3d7"
+  description: "문서·컨벤션"
+
+- name: "type: refactor"
+  color: "e4e669"
+  description: "동작 변경 없는 코드 개선"
+
+# area
+- name: "area: app"
+  color: "e99695"
+  description: "Expo React Native 앱"
+
+- name: "area: server"
+  color: "74d7d7"
+  description: "NestJS 서버"
+
+# priority
+- name: "priority: high"
+  color: "b60205"
+  description: "빠른 처리 필요"
+
+- name: "priority: low"
+  color: "eeeeee"
+  description: "여유 있을 때 처리"
