@@ -1,5 +1,6 @@
-import { ExecutionContext } from '@nestjs/common';
+import { ExecutionContext, HttpStatus } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
+import { InternalException } from '~/libs/exceptions/internal.exception';
 import { AppException } from '~/libs/exceptions/app-exception.base';
 import { AuthUser } from '~/libs/auth/auth.port';
 import { GraphQLContext } from '~/libs/graphql/graphql-context.type';
@@ -30,7 +31,7 @@ describe('@CurrentUser', () => {
     expect(result).toEqual(user);
   });
 
-  it('req.user가 없으면 일반 Error를 던진다 (AppException 아님 → 필터에서 INTERNAL_ERROR/500 sanitize)', () => {
+  it('req.user가 없으면 InternalException(500)을 던진다 — AppException(4xx) 아님', () => {
     let caught: unknown;
     try {
       currentUserFactory(undefined, makeContext(undefined));
@@ -38,7 +39,9 @@ describe('@CurrentUser', () => {
       caught = e;
     }
 
-    expect(caught).toBeInstanceOf(Error);
+    expect(caught).toBeInstanceOf(InternalException);
     expect(caught).not.toBeInstanceOf(AppException);
+    expect((caught as InternalException).httpStatus).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
+    expect((caught as InternalException).code).toBe('INTERNAL_ERROR');
   });
 });

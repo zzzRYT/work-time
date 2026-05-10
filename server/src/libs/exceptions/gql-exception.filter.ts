@@ -1,7 +1,7 @@
-import { Catch, ArgumentsHost, ExceptionFilter, Logger } from '@nestjs/common';
+import { Catch, ArgumentsHost, ExceptionFilter, HttpStatus, Logger } from '@nestjs/common';
 import { GqlArgumentsHost } from '@nestjs/graphql';
 import { GraphQLError } from 'graphql';
-import { AppException } from './app-exception.base';
+import { BaseException } from './base-exception.base';
 
 @Catch()
 export class GqlExceptionFilter implements ExceptionFilter {
@@ -13,7 +13,10 @@ export class GqlExceptionFilter implements ExceptionFilter {
   }
 
   toGraphQLError(exception: unknown): GraphQLError {
-    if (exception instanceof AppException) {
+    if (
+      exception instanceof BaseException &&
+      exception.httpStatus < HttpStatus.INTERNAL_SERVER_ERROR
+    ) {
       return new GraphQLError(exception.message, {
         extensions: {
           code: exception.code,
@@ -22,14 +25,16 @@ export class GqlExceptionFilter implements ExceptionFilter {
       });
     }
 
-    // Non-AppException은 예상 밖 서버 오류로 간주.
-    // 원본 메시지/스택은 로그로만 남기고 클라이언트엔 일반 메시지만 노출.
+    // 5xx BaseException 또는 알 수 없는 예외 — 원본은 로그로만, 클라이언트엔 일반 메시지
     this.logger.error(
       exception instanceof Error ? exception.stack ?? exception.message : exception,
     );
 
     return new GraphQLError('Internal server error', {
-      extensions: { code: 'INTERNAL_ERROR', httpStatus: 500 },
+      extensions: {
+        code: 'INTERNAL_ERROR',
+        httpStatus: HttpStatus.INTERNAL_SERVER_ERROR,
+      },
     });
   }
 }
