@@ -28,10 +28,12 @@ describe('Entity', () => {
     expect(e.updatedAt.getTime()).toBeGreaterThan(created.getTime());
   });
 
-  it('delete()는 deletedAt을 설정한다', () => {
+  it('delete()는 deletedAt을 설정하고 isDeleted가 true가 된다', () => {
     const e = new TestEntity({ id: 'a' });
+    expect(e.isDeleted).toBe(false);
     expect(e.deletedAt).toBeUndefined();
     e.delete();
+    expect(e.isDeleted).toBe(true);
     expect(e.deletedAt).toBeInstanceOf(Date);
   });
 
@@ -46,9 +48,10 @@ describe('Entity', () => {
   it('restore()는 deletedAt을 비우고 updatedAt을 갱신한다', async () => {
     const e = new TestEntity({ id: 'a' });
     e.delete();
-    expect(e.deletedAt).toBeInstanceOf(Date);
+    expect(e.isDeleted).toBe(true);
     await new Promise(r => setTimeout(r, 5));
     e.restore();
+    expect(e.isDeleted).toBe(false);
     expect(e.deletedAt).toBeUndefined();
   });
 

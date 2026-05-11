@@ -270,7 +270,7 @@ await this.repo.save(workspace);
 
 // 복원 (예: 동일 slug로 재생성 요청 시)
 const existing = await this.repo.findWithDeleted({ slug });
-if (existing?.deletedAt !== undefined) {
+if (existing?.isDeleted) {
   existing.restore();
   await this.repo.save(existing);
 } else if (!existing) {
@@ -321,6 +321,7 @@ export abstract class Entity<T> {
   get createdAt(): Date { return this._createdAt; }
   get updatedAt(): Date { return this._updatedAt; }
   get deletedAt(): Date | undefined { return this._deletedAt; }
+  get isDeleted(): boolean { return this._deletedAt !== undefined; }
 
   protected touch(): void {
     this._updatedAt = new Date();
