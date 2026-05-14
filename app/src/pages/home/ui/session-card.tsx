@@ -2,6 +2,7 @@ import { View, Text } from "react-native";
 import { cn } from "@shared/lib/cn";
 import { Timer } from "./timer";
 import { CheckButton } from "./check-button";
+import { getSessionCardState } from "./session-card-state";
 
 type SessionCardProps = {
   status: string;
@@ -25,12 +26,6 @@ function formatTotalStudy(min: number): string {
   return `${h}시간 ${m}분`;
 }
 
-function getButtonState(status: string): "idle" | "studying" | "completed" {
-  if (status === "STUDYING") return "studying";
-  if (status === "COMPLETED" || status === "LATE") return "completed";
-  return "idle";
-}
-
 export function SessionCard({
   status,
   checkInTime,
@@ -45,17 +40,13 @@ export function SessionCard({
   optimisticCheckInTime,
   className,
 }: SessionCardProps) {
-  const effectiveStatus =
-    pendingAction === "checkin" ? "STUDYING" :
-    pendingAction === "checkout" ? "COMPLETED" :
-    status;
-  const effectiveCheckInTime =
-    pendingAction === "checkin" ? (optimisticCheckInTime ?? null) :
-    pendingAction === "checkout" ? null :
-    checkInTime;
-  const isStudying = effectiveStatus === "STUDYING";
+  const { buttonState, isStudying, timerCheckInTime } = getSessionCardState({
+    status,
+    checkInTime,
+    pendingAction,
+    optimisticCheckInTime,
+  });
   const isVacation = status === "VACATION" || (vacationHours != null && vacationHours >= 8);
-  const buttonState = getButtonState(effectiveStatus);
 
   if (isVacation) {
     return (
@@ -87,7 +78,7 @@ export function SessionCard({
         </View>
       )}
 
-      <Timer checkInTime={isStudying ? effectiveCheckInTime : null} className="mb-2" />
+      <Timer checkInTime={isStudying ? timerCheckInTime : null} className="mb-2" />
 
       <Text
         className={cn(
