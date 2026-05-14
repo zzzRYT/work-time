@@ -7,9 +7,11 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
     "graphql:schema": "gql-tada generate-schema http://localhost:4000/graphql --output ./src/graphql/schema.graphql",
     "graphql:generate": "gql-tada generate-output",
-    "graphql:sync": "npm run graphql:schema && npm run graphql:generate"
+    "graphql:sync": "bun run graphql:schema && bun run graphql:generate"
   },
   "dependencies": {
     "@apollo/client": "^3.14.0",

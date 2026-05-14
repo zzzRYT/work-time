@@ -3,10 +3,14 @@ name: App Build
 on:
   push:
     branches: [main]
-    paths: [app/**]
+    paths:
+      - app/**
+      - .github/workflows/app-build.yml
   pull_request:
     branches: [main]
-    paths: [app/**]
+    paths:
+      - app/**
+      - .github/workflows/app-build.yml
 
 jobs:
   build:
@@ -19,13 +23,20 @@ jobs:
         with:
           bun-version: latest
 
+      - name: Install dependencies
+        run: cd app && bun install --frozen-lockfile
+
+      - name: Typecheck
+        run: cd app && bun run typecheck
+
+      - name: Test
+        run: cd app && bun run test
+
       - uses: expo/expo-github-action@v8
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Install dependencies
-        run: cd app && bun install --frozen-lockfile
 
       - name: Build Android (preview)
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
